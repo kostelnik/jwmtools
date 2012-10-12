@@ -1,0 +1,53 @@
+Bugs in tools
+-------------
+1. trayumount - when user remove USB flash without properly removing it in
+   this applet,  directory /media/SOMETHING will stay there and it is 
+   impossible to mount this disk again unless you remove this directory 
+   (as root).
+ 
+2. trayvolume - does not work with synaptics touchpad (I somehow cannot trigger
+   propper wheel events, perhaps it produces pgup/pgdn events instead when
+   using touchpad)
+
+3. trayweather - location is hardcoded in source (search for LZKZ)
+
+4. traykeymap - detection of current layout currently works only for US 
+   and SK layouts
+
+5. appmenugen - for some reason it put audacious in Development category
+
+6. at strart I rut this command:
+
+     setxkbmap -option compose:rwin,grp:switch,grp:alt_shift_toggle us,sk -variant ,qwerty terminate:ctrl_alt_bksp
+  
+   When I connect second keyboard, I cannot switch layout on it, it stays the same.
+   It switch only layout on first keyboard. When I type "setxkbmap us" to switch to
+   us, I lost switching altogether. I don't know solution. Probably this (different 
+   layout order):
+
+     1. setxkbmap -option compose:rwin,grp:switch,grp:alt_shift_toggle us,sk -variant ,qwerty terminate:ctrl_alt_bksp
+     2. setxkbmap -option compose:rwin,grp:switch,grp:alt_shift_toggle sk,us -variant ,qwerty terminate:ctrl_alt_bksp
+    
+   or completely ignore xorg layout switching and use my own shortcutkey in jwmrc and some 
+   `togglelayout` command.
+
+
+JWM's own bugs
+--------------
+- on panel, there is 1px outer border so if you move cursor to the corner 
+  of the screen and click, nothing will happen because you clicked on that
+  border, you have to move 1px inward and then click, very unergonomic!
+   
+- sometimes no window has focus. Usually when stardict is running
+  and is minimized to tray, but it can happen anytime.
+   
+- occasionally segfault (2-3 times per year)
+
+- jwm very often place windows under top panel, esp. fontforge but others too
+
+- with same panel height as gnome (25 pixelov) jwm shows 16px icons, gnome was displaying better 22px icons
+
+- If I set "Super_L <number>" for desktop switching, then "Super_L 0" should switch to Desktop #10, now only 9 desktops are supported instead of 10
+
+- iconify using mouse scroll on window border is very confusing and prone to mistakes, at least allow me to turn it of in config file 
+

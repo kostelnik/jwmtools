@@ -1,0 +1,19 @@
+Requirements
+============
+- GTK and glade (tray*, libglade2-dev)
+- blkid, pmount, pumount (trayumount)
+- ALSA (amixer) or Pulse audio (trayvolume)
+- METAR library (trayweather, libmdsp-dev)
+- GLIB (appmenugen, libglib-2.0)
+
+Compilation
+===========
+- Edit config.mk and change PREFIX if you want to install it somewhere
+  else than default location (/opt/jwmtools/VERSION/...)
+- make clean all && sudo make install
+
+Troubleshooting
+===============
+- bugzilla on github
+
+

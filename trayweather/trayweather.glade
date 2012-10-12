@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <!-- interface-requires gtk+ 2.8 -->
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkWindow" id="winMain1">
+    <property name="border_width">4</property>
+    <property name="window_position">mouse</property>
+    <property name="icon_name">weather-clear</property>
+    <signal name="delete_event" handler="gtk_widget_hide"/>
+    <child>
+      <object class="GtkHBox" id="hbox1">
+        <property name="visible">True</property>
+        <child>
+          <object class="GtkVBox" id="vbox1">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkLabel" id="labTitle1">
+                <property name="visible">True</property>
+                <property name="events">GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_STRUCTURE_MASK | GDK_SCROLL_MASK</property>
+                <property name="ypad">15</property>
+                <property name="label">&lt;b&gt;labTitle1&lt;/b&gt;</property>
+                <property name="use_markup">True</property>
+                <property name="ellipsize">middle</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="labDateTime1">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">labDateTime1</property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="labPressureVisibility1">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">labPressureVisibility1</property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="padding">5</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="vbox2">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkImage" id="imgClouds1">
+                <property name="visible">True</property>
+                <property name="pixel_size">64</property>
+                <property name="icon_name">gtk-missing-image</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="labTemp1">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">&lt;b&gt;labTemp1&lt;/b&gt;</property>
+                <property name="use_markup">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="padding">5</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkVBox" id="vbox3">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkImage" id="imgWind1">
+                <property name="visible">True</property>
+                <property name="pixel_size">64</property>
+                <property name="icon_name">gtk-missing-image</property>
+              </object>
+              <packing>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="labWind1">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">&lt;b&gt;labWind1&lt;/b&gt;</property>
+                <property name="use_markup">True</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="padding">5</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer1"/>
+  <object class="GtkWindow" id="winWeatherTray1">
+    <property name="window_position">mouse</property>
+    <property name="icon_name">weather-clear</property>
+    <property name="type_hint">dock</property>
+    <signal name="delete_event" handler="on_winWeatherTray1_delete_event"/>
+    <child>
+      <object class="GtkEventBox" id="eventbox1">
+        <property name="visible">True</property>
+        <property name="receives_default">True</property>
+        <property name="events">GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_STRUCTURE_MASK</property>
+        <property name="above_child">True</property>
+        <signal name="button_press_event" handler="on_eventbox1_button_press_event"/>
+        <child>
+          <object class="GtkHBox" id="hbox2">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtkImage" id="imgTray1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="events">GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_STRUCTURE_MASK</property>
+                <property name="extension_events">cursor</property>
+                <property name="xpad">2</property>
+                <property name="icon_name">gtk-missing-image</property>
+                <signal name="button_press_event" handler="on_imgTray1_button_press_event"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="labTray1">
+                <property name="visible">True</property>
+                <property name="xpad">2</property>
+                <property name="label" translatable="yes">???°C</property>
+              </object>
+              <packing>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -1,0 +1,12 @@
+
+TODO
+----
+- trayscript if ~/.config/jwmtools/trayscript.sh is not found, show missing script path instead of empty label
+
+Wishlist
+--------
+- tray applet with frequently used applications (next to launchers)
+- something for simple CD/DVD clonning
+- system menu (parameter for appmenugen to show only system categories or something)
+- calendar (there is some component in glade, should be easy enough), current "cal -3 | gmessage -file -" is not very usefull
+- proper "turn off dialog" (also with reboot, logout, etc..), currently gmessage (and poweroff if confirmed)

@@ -1,0 +1,87 @@
+
+Various notes and tips
+======================
+
+- sysmonitor occasionally segfault. It happens when reading /proc/net/dev
+  using fscanf. I "fixed" it by isolating that code to standalone app and
+  running it throught popen.
+
+- keyboard switching using alt+shift (note that this does not work very well with multiple physical keyboards!)
+  
+    setxkbmap -option grp:switch,grp:alt_shift_toggle us,sk -variant ,qwerty
+
+- set proper numlock on start:
+    
+    in console (e.g. /etc/rc.local): setleds +num
+    in Xorg (e.g. jwm startcommand): numlockx on     (probably it will not shine but it is turned on)
+  
+- tango icon theme
+
+    Into ~/.gtkrc-2.0 or ~/.gtkrc-2.0.mine add this:
+    
+    style "user-font"
+    {
+    font_name="Sans Serif 12"
+    }
+    widget_class "*" style "user-font"
+    
+    gtk-icon-theme-name = "Tango"
+    gtk-font-name = "Sans Serif 12"
+
+- cursor theme:
+
+  sudo update-alternatives --config x-cursor-theme
+
+- XScreenSaver need some ultra serious hacking of ~/.Xresources to look normal, also
+  editing source code to remove that ugly logo. Also start xscreenserver with "-no-splash" switch.
+
+  xscreensaver.splash: false
+  !font settings
+  xscreensaver.Dialog.headingFont:        -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+  xscreensaver.Dialog.bodyFont:           -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+  xscreensaver.Dialog.labelFont:          -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+  xscreensaver.Dialog.unameFont:          -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+  xscreensaver.Dialog.buttonFont:         -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+  xscreensaver.Dialog.dateFont:           -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+  xscreensaver.passwd.passwdFont:         -*-terminus-*-r-*-*-14-*-*-*-*-*-*-1
+  !general dialog box (affects main hostname, username, password text)
+  xscreensaver.Dialog.foreground:         #000001
+  xscreensaver.Dialog.background:         #000000
+  xscreensaver.Dialog.topShadowColor:     #000000
+  xscreensaver.Dialog.bottomShadowColor:  #000000
+  xscreensaver.Dialog.Button.foreground:  #000000
+  xscreensaver.Dialog.Button.background:  #000000
+  !username/password input box and date text color
+  xscreensaver.Dialog.text.foreground:    #000000
+  xscreensaver.Dialog.text.background:    #aaaaaa
+  xscreensaver.Dialog.internalBorderWidth:24
+  xscreensaver.Dialog.borderWidth:        20
+  xscreensaver.Dialog.shadowThickness:    2
+  !timeout bar (background is actually determined by Dialog.text.background)
+  xscreensaver.passwd.thermometer.foreground:  #777777
+  xscreensaver.passwd.thermometer.background:  #aaaaaa
+  xscreensaver.passwd.thermometer.width:       2
+  !datestamp format--see the strftime(3) manual page for details
+  xscreensaver.dateFormat:    %I:%M%P %a %b %d, %Y
+  
+  Perhaps slock would be better choice eventually? Although it does not display anything when typing password :(
+
+JWM modifications
+-----------------
+
+- do not show exact pixel position of window when windows is being moved
+  
+  status.c: find following function and add "return;" to the first line
+    
+    void DrawMoveResizeWindow(const ClientNode *np, StatusWindowType type) {
+     return; // here
+
+- do not show border around tray buttons "Applications Places System"
+
+   case BUTTON_TASK:
+      /* Flat taskbuttons (only icon) for widths < 48 */
+      if(width < 48) {     <--------- change this to 120 (would be better to detect caption but this works, who cares)
+         break;
+      }
+      /* conditional fallthrough is intended */..
+
