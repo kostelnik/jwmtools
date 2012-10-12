@@ -6,15 +6,15 @@ Various tools for jwm window manager.
 Tray applets
 ------------
 
-!(doc/traykeymap.png) *traykeymap*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/traykeymap.png) *traykeymap*
 Tray applet for displaying current keyboard layout.
 
-!(doc/traymonitor.png) *traymonitor*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/traymonitor.png) *traymonitor*
 Tray applet for displaying system load (cpu, load, memory, swap, network, 
 disk). It uses console tool sysmonitor (sources included) as backend for 
 obtaining these data.
                          
-!(doc/trayscript.png) *trayscript*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/trayscript.png) *trayscript*
 Tray applet for displaying output of any (bash) script. Special, user defined,
 script is executed every 30s and it's output is displayed in tray. This
 script can contain whatever you want to be displayed on tray, e.g. 
@@ -23,22 +23,22 @@ displaying amount of free space on disk. Main purpose of this applet is to
 quickly display information for which regular applet do not exist yet. For most
 cases this approach is good enough.
 
-!(doc/trayusermount.png) !(doc/trayusermount2.png) *trayusermount*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/trayusermount.png) !(https://github.com/kostelnik/jwmtools/raw/master/doc/trayusermount2.png) *trayusermount*
 Tray applet for mounting and unmounting removable devices such as USB flash
 disks. It uses pmount, pumount and blkid console tools. --> bug #1
 
-!(doc/trayvolume.png) *trayvolume*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/trayvolume.png) *trayvolume*
 Tray applet for changing master audio volume. Both ALSA and Pulse audio are
 supported. Volume is regulated using mouse wheel. --> bug #2
 
-!(doc/trayweather1.png) *trayweather*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/trayweather1.png) *trayweather*
 Applet for displaying weather information using METAR data (clouds, wind, 
 temperature, pressure, visibility). --> bug #3
 
 Backend tools
 -------------
 
-!(doc/appmenugen.png) *appmenugen*
+!(https://github.com/kostelnik/jwmtools/raw/master/doc/appmenugen.png) *appmenugen*
 Parse all *.desktop files and generate menu with categories. Output is xml
 file that can be used as part of JWM config file using this code:
 
