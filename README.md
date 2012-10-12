@@ -6,15 +6,14 @@ Various tools for jwm window manager.
 Tray applets
 ------------
 
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/traykeymap.png)
 - **traykeymap** displays current keyboard layout.
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/traykeymap.png)
 
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/traymonitor.png)
 - **traymonitor** applet displays system load (cpu, load, memory, swap, network, 
 disk). It uses console tool sysmonitor (sources included) as backend for 
 obtaining these data.
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/traymonitor.png)
                          
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayscript.png)
 - **trayscript** applet displays output of any (bash) script. Special, user defined,
 script is executed every 30s and it's output is displayed in tray. This
 script can contain whatever you want to be displayed on tray, e.g. 
@@ -22,23 +21,23 @@ script can contain whatever you want to be displayed on tray, e.g.
 displaying amount of free space on disk. Main purpose of this applet is to
 quickly display information for which regular applet do not exist yet. For most
 cases this approach is good enough.
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayscript.png)
 
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayusermount.png) ![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayusermount2.png)
 - **trayusermount** applet is for mounting and unmounting removable devices such as USB flash
 disks. It uses pmount, pumount and blkid console tools.
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayusermount.png) ![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayusermount2.png)
 
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayvolume.png)
 - **trayvolume** applet is for changing master audio volume. Both ALSA and Pulse audio are
 supported. Volume is regulated using mouse wheel.
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayvolume.png)
 
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayweather1.png)
 - **trayweather** is applet for displaying weather information using METAR data (clouds, wind, 
 temperature, pressure, visibility).
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/trayweather1.png)
 
 Backend tools
 -------------
 
-![](https://github.com/kostelnik/jwmtools/raw/master/doc/appmenugen.png)
 - **appmenugen** parse all *.desktop files and generate menu with categories. Output is xml
 file that can be used as part of JWM config file using this code:
 
@@ -46,6 +45,8 @@ file that can be used as part of JWM config file using this code:
     <RootMenu height="24" onroot="6">
         <Include>exec:/opt/jwmtools/0.1/bin/appmenugen</Include>
     </RootMenu>
+
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/appmenugen.png)
 
 - **movemousecursor** is tool which move cursor to bottom right corner of the screen (or any other
 location specified by first and second parameter)
