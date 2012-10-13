@@ -8,6 +8,7 @@
 #include <values.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <glib.h>
 
 #define HEIGHT 19
 
@@ -15,14 +16,6 @@ GtkBuilder *builder;
 GtkWidget *winTray1;
 GtkDrawingArea *d_cpu, *d_load, *d_mem, *d_swap, *d_net, *d_disk;
 GArray *a_cpu, *a_load, *a_mem, *a_swap, *a_net, *a_disk;
-
-gboolean file_exists(gchar *pathfilename);
-
-gboolean file_exists(gchar *pathfilename) {
-  // return true if specified file exists
-  struct stat s;
-  return (stat(pathfilename, &s) == 0);
-}
 
 unsigned long long cpu_idle, cpu_idle_old;
 int cores;
@@ -83,9 +76,9 @@ update(GtkWidget *widget) {
 
   // execute backend sysmonitor
   FILE *f;
-  if (file_exists(PREFIX"/bin/sysmonitor"))
+  if (g_file_test(PREFIX"/bin/sysmonitor",G_FILE_TEST_EXISTS))
     f = popen(PREFIX"/bin/sysmonitor","r");
-  if (file_exists("../sysmonitor/sysmonitor"))
+  if (g_file_test("../sysmonitor/sysmonitor",G_FILE_TEST_EXISTS))
     f = popen("../sysmonitor/sysmonitor","r");
   assert(f);
     
