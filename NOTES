@@ -75,6 +75,16 @@ JWM modifications
     
     void DrawMoveResizeWindow(const ClientNode *np, StatusWindowType type) {
      return; // here
+     
+  Update: in jwm rev 581 there is support to turn this off in jwmrc. Simply change these lines:
+  
+    <MoveMode>outline</MoveMode>
+    <ResizeMode>outline</ResizeMode>
+
+  to this:
+
+    <MoveMode coordinates="off">outline</MoveMode>
+    <ResizeMode coordinates="off">outline</ResizeMode>
 
 - do not show border around tray buttons "Applications Places System"
 
