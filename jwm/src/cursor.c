@@ -54,7 +54,7 @@ void StartupCursors() {
    chooseCursor = CreateCursor(XC_tcross);
 
    JXQueryPointer(display, rootWindow, &win1, &win2,
-      &mousex, &mousey, &winx, &winy, &mask);
+                  &mousex, &mousey, &winx, &winy, &mask);
 
 }
 
@@ -146,7 +146,7 @@ int GrabMouseForResize(BorderActionType action) {
       | ButtonReleaseMask | PointerMotionMask, GrabModeAsync,
       GrabModeAsync, None, cur, CurrentTime);
 
-   if(result == GrabSuccess) {
+   if(JLIKELY(result == GrabSuccess)) {
       return 1;
    } else {
       return 0;
@@ -163,14 +163,10 @@ int GrabMouseForMove() {
       ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
       GrabModeAsync, GrabModeAsync, None, moveCursor, CurrentTime);
 
-   if(result == GrabSuccess) {
-
+   if(JLIKELY(result == GrabSuccess)) {
       return 1;
-
    } else {
-
       return 0;
-
    }
 
 }
@@ -184,7 +180,7 @@ int GrabMouse(Window w) {
       ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
       GrabModeAsync, GrabModeAsync, None, defaultCursor, CurrentTime);
 
-   if(result == GrabSuccess) {
+   if(JLIKELY(result == GrabSuccess)) {
       return 1;
    } else {
       return 0;
@@ -201,7 +197,7 @@ int GrabMouseForChoose() {
       ButtonPressMask | ButtonReleaseMask | PointerMotionMask,
       GrabModeAsync, GrabModeAsync, None, chooseCursor, CurrentTime);
 
-   if(result == GrabSuccess) {
+   if(JLIKELY(result == GrabSuccess)) {
       return 1;
    } else {
       return 0;
@@ -226,7 +222,7 @@ void MoveMouse(Window win, int x, int y) {
    JXWarpPointer(display, None, win, 0, 0, 0, 0, x, y);
 
    JXQueryPointer(display, rootWindow, &win1, &win2,
-      &mousex, &mousey, &winx, &winy, &mask);
+                  &mousex, &mousey, &winx, &winy, &mask);
 
 }
 
@@ -270,8 +266,9 @@ void SetDoubleClickSpeed(const char *str) {
 
    if(str) {
       speed = atoi(str);
-      if(speed < MIN_DOUBLE_CLICK_SPEED || speed > MAX_DOUBLE_CLICK_SPEED) {
-         Warning("invalid DoubleClickSpeed: %d", speed);
+      if(JUNLIKELY(speed < MIN_DOUBLE_CLICK_SPEED
+                   || speed > MAX_DOUBLE_CLICK_SPEED)) {
+         Warning(_("invalid DoubleClickSpeed: %d"), speed);
          doubleClickSpeed = DEFAULT_DOUBLE_CLICK_SPEED;
       } else {
          doubleClickSpeed = speed;
@@ -287,8 +284,9 @@ void SetDoubleClickDelta(const char *str) {
 
    if(str) {
       delta = atoi(str);
-      if(delta < MIN_DOUBLE_CLICK_DELTA || delta > MAX_DOUBLE_CLICK_DELTA) {
-         Warning("invalid DoubleClickDelta: %d", delta);
+      if(JUNLIKELY(delta < MIN_DOUBLE_CLICK_DELTA
+                   || delta > MAX_DOUBLE_CLICK_DELTA)) {
+         Warning(_("invalid DoubleClickDelta: %d"), delta);
          doubleClickDelta = DEFAULT_DOUBLE_CLICK_DELTA;
       } else {
          doubleClickDelta = delta;

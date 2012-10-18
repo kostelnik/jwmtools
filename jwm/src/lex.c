@@ -77,6 +77,7 @@ static const char *TOKEN_MAP[] = {
    "Shade",
    "ShutdownCommand",
    "SnapMode",
+   "Spacer",
    "StartupCommand",
    "Stick",
    "Swallow",
@@ -102,12 +103,12 @@ static int IsValueEnd(char ch);
 static int IsAttributeEnd(char ch);
 static int IsSpace(char ch, int *lineNumber);
 static char *ReadElementName(const char *line);
-static char *ReadElementValue(const char *line,
-   const char *file, int *lineNumber);
+static char *ReadElementValue(const char *line, const char *file,
+                              int *lineNumber);
 static char *ReadAttributeValue(const char *line, const char *file,
-   int *lineNumber);
+                                int *lineNumber);
 static int ParseEntity(const char *entity, char *ch,
-   const char *file, int line);
+                       const char *file, int line);
 static TokenType LookupType(const char *name, TokenNode *np);
 
 /** Tokenize a data. */
@@ -176,27 +177,27 @@ TokenNode *Tokenize(const char *line, const char *fileName) {
 
             if(current) {
 
-               if(temp) {
+               if(JLIKELY(temp)) {
 
-                  if(current->type != LookupType(temp, NULL)) {
-                     Warning("%s[%d]: close tag \"%s\" does not "
-                        "match open tag \"%s\"",
-                        fileName, lineNumber, temp,
-                        GetTokenName(current));
+                  if(JUNLIKELY(current->type != LookupType(temp, NULL))) {
+                     Warning(_("%s[%d]: close tag \"%s\" does not "
+                             "match open tag \"%s\""),
+                             fileName, lineNumber, temp,
+                             GetTokenName(current));
                   }
 
                } else {
-                  Warning("%s[%d]: unexpected and invalid close tag",
-                     fileName, lineNumber);
+                  Warning(_("%s[%d]: unexpected and invalid close tag"),
+                          fileName, lineNumber);
                }
 
                current = current->parent;
             } else {
                if(temp) {
-                  Warning("%s[%d]: close tag \"%s\" without open "
-                     "tag", fileName, lineNumber, temp);
+                  Warning(_("%s[%d]: close tag \"%s\" without open tag"),
+                          fileName, lineNumber, temp);
                } else {
-                  Warning("%s[%d]: invalid close tag", fileName, lineNumber);
+                  Warning(_("%s[%d]: invalid close tag"), fileName, lineNumber);
                }
             }
 
@@ -210,12 +211,12 @@ TokenNode *Tokenize(const char *line, const char *fileName) {
             current = NULL;
             np = CreateNode(np, fileName, lineNumber);
             temp = ReadElementName(line + x);
-            if(temp) {
+            if(JLIKELY(temp)) {
                x += strlen(temp);
                LookupType(temp, np);
                Release(temp);
             } else {
-               Warning("%s[%d]: invalid open tag", fileName, lineNumber);
+               Warning(_("%s[%d]: invalid open tag"), fileName, lineNumber);
             }
          }
          inElement = 1;
@@ -223,12 +224,12 @@ TokenNode *Tokenize(const char *line, const char *fileName) {
       case '/':
          if(inElement) {
             ++x;
-            if(line[x] == '>' && current) {
+            if(JLIKELY(line[x] == '>' && current)) {
                ++x;
                current = current->parent;
                inElement = 0;
             } else {
-               Warning("%s[%d]: invalid tag", fileName, lineNumber);
+               Warning(_("%s[%d]: invalid tag"), fileName, lineNumber);
             }
          } else {
             goto ReadDefault;
@@ -274,9 +275,9 @@ ReadDefault:
                      current->value = temp;
                   }
                } else {
-                  if(temp[0]) {
-                     Warning("%s[%d]: unexpected text: \"%s\"",
-                        fileName, lineNumber, temp);
+                  if(JUNLIKELY(temp[0])) {
+                     Warning(_("%s[%d]: unexpected text: \"%s\""),
+                             fileName, lineNumber, temp);
                   }
                   Release(temp);
                }
@@ -321,7 +322,7 @@ int ParseEntity(const char *entity, char *ch, const char *file, int line) {
       temp = AllocateStack(x + 2);
       strncpy(temp, entity, x + 1);
       temp[x + 1] = 0;
-      Warning("%s[%d]: invalid entity: \"%.8s\"", file, line, temp);
+      Warning(_("%s[%d]: invalid entity: \"%.8s\""), file, line, temp);
       ReleaseStack(temp);
       *ch = '&';
       return 1;
@@ -492,7 +493,7 @@ TokenType LookupType(const char *name, TokenNode *np) {
       }
    }
 
-   if(np) {
+   if(JUNLIKELY(np)) {
       np->type = TOK_INVALID;
       np->invalidName = CopyString(name);
    }

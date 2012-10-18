@@ -20,6 +20,7 @@
 #include "button.h"
 #include "event.h"
 #include "error.h"
+#include "root.h"
 
 #define BASE_ICON_OFFSET 3
 
@@ -63,13 +64,15 @@ void InitializeMenu(Menu *menu) {
 
    MenuItem *np;
    int index, temp;
-   int hasSubmenu;
    int userHeight;
+   int hasSubmenu;
+   char hasIcon;
 
    menu->textOffset = 0;
    menu->itemCount = 0;
 
    /* Compute the max size needed */
+   hasIcon = 0;
    userHeight = menu->itemHeight;
    if(userHeight < 0) {
       userHeight = 0;
@@ -87,11 +90,12 @@ void InitializeMenu(Menu *menu) {
                   menu->textOffset = np->icon->image->width + 4;
                }
             }
+            hasIcon = 1;
          }
       } else {
          np->icon = NULL;
       }
-      ++menu->itemCount;
+      menu->itemCount += 1;
    }
    menu->itemHeight += BASE_ICON_OFFSET * 2;
 
@@ -118,7 +122,7 @@ void InitializeMenu(Menu *menu) {
    }
 
    /* Nothing else to do if there is nothing in the menu. */
-   if(menu->itemCount == 0) {
+   if(JUNLIKELY(menu->itemCount == 0)) {
       return;
    }
 
@@ -134,10 +138,13 @@ void InitializeMenu(Menu *menu) {
          menu->height += menu->itemHeight;
       }
       if(np->name) {
-         temp = GetStringWidth(FONT_MENU, np->name) + 2;
+         temp = GetStringWidth(FONT_MENU, np->name);
          if(temp > menu->width) {
             menu->width = temp;
          }
+      }
+      if(hasIcon && !np->icon) {
+         np->icon = &emptyIcon;
       }
       if(np->submenu) {
          hasSubmenu = 7;
@@ -145,7 +152,7 @@ void InitializeMenu(Menu *menu) {
       }
    }
    menu->height += 2;
-   menu->width += 15 + hasSubmenu + menu->textOffset;
+   menu->width += 12 + hasSubmenu + menu->textOffset;
 
 }
 
@@ -155,14 +162,14 @@ void ShowMenu(Menu *menu, RunMenuCommandType runner, int x, int y) {
    int mouseStatus, keyboardStatus;
 
    /* Don't show the menu if there isn't anything to show. */
-   if(!IsMenuValid(menu)) {
+   if(JUNLIKELY(!IsMenuValid(menu))) {
       return;
    }
 
    mouseStatus = GrabMouse(rootWindow);
    keyboardStatus = JXGrabKeyboard(display, rootWindow, False,
-      GrabModeAsync, GrabModeAsync, CurrentTime);
-   if(!mouseStatus || keyboardStatus != GrabSuccess) {
+                                   GrabModeAsync, GrabModeAsync, CurrentTime);
+   if(JUNLIKELY(!mouseStatus || keyboardStatus != GrabSuccess)) {
       return;
    }
 
@@ -175,6 +182,10 @@ void ShowMenu(Menu *menu, RunMenuCommandType runner, int x, int y) {
    if(menuAction) {
       (runner)(menuAction);
       menuAction = NULL;
+   }
+
+   if(shouldReload) {
+      ReloadMenu();
    }
 
 }
@@ -227,9 +238,9 @@ int ShowSubmenu(Menu *menu, Menu *parent, int x, int y) {
    menu->parent = parent;
    CreateMenu(menu, x, y);
 
-   ++menuShown;
+   menuShown += 1;
    status = MenuLoop(menu);
-   --menuShown;
+   menuShown -= 1;
 
    HideMenu(menu);
 
@@ -392,6 +403,7 @@ void DrawMenu(Menu *menu) {
 
    MenuItem *np;
    int x;
+   XSegment segments[4];
 
    if(menu->label) {
       DrawMenuItem(menu, NULL, -1);
@@ -404,24 +416,26 @@ void DrawMenu(Menu *menu) {
    }
 
    JXSetForeground(display, rootGC, colors[COLOR_MENU_UP]);
-   JXDrawLine(display, menu->window, rootGC,
-      0, 0, menu->width - 1, 0);
-   JXDrawLine(display, menu->window, rootGC,
-      0, 1, menu->width - 2, 1);
-   JXDrawLine(display, menu->window, rootGC,
-      0, 2, 0, menu->height - 1);
-   JXDrawLine(display, menu->window, rootGC,
-      1, 2, 1, menu->height - 2);
+   segments[0].x1 = 0;                 segments[0].y1 = 0;
+   segments[0].x2 = menu->width - 1;   segments[0].y2 = 0;
+   segments[1].x1 = 0;                 segments[1].y1 = 1;
+   segments[1].x2 = menu->width - 2;   segments[1].y2 = 1;
+   segments[2].x1 = 0;                 segments[2].y1 = 2;
+   segments[2].x2 = 0;                 segments[2].y2 = menu->height - 1;
+   segments[3].x1 = 1;                 segments[3].y1 = 2;
+   segments[3].x2 = 1;                 segments[3].y2 = menu->height - 2;
+   JXDrawSegments(display, menu->window, rootGC, segments, 4);
 
    JXSetForeground(display, rootGC, colors[COLOR_MENU_DOWN]);
-   JXDrawLine(display, menu->window, rootGC,
-      1, menu->height - 1, menu->width - 1, menu->height - 1);
-   JXDrawLine(display, menu->window, rootGC,
-      2, menu->height - 2, menu->width - 1, menu->height - 2);
-   JXDrawLine(display, menu->window, rootGC,
-      menu->width - 1, 1, menu->width - 1, menu->height - 3);
-   JXDrawLine(display, menu->window, rootGC,
-      menu->width - 2, 2, menu->width - 2, menu->height - 3);
+   segments[0].x1 = 1;                 segments[0].y1 = menu->height - 1;
+   segments[0].x2 = menu->width - 1;   segments[0].y2 = menu->height - 1;
+   segments[1].x1 = 2;                 segments[1].y1 = menu->height - 2;
+   segments[1].x2 = menu->width - 1;   segments[1].y2 = menu->height - 2;
+   segments[2].x1 = menu->width - 1;   segments[2].y1 = 1;
+   segments[2].x2 = menu->width - 1;   segments[2].y2 = menu->height - 3;
+   segments[3].x1 = menu->width - 2;   segments[3].y1 = 2;
+   segments[3].x2 = menu->width - 2;   segments[3].y2 = menu->height - 3;
+   JXDrawSegments(display, menu->window, rootGC, segments, 4);
 
 }
 
@@ -687,12 +701,12 @@ void DrawMenuItem(Menu *menu, MenuItem *item, int index) {
 
       JXSetForeground(display, rootGC, colors[COLOR_MENU_DOWN]);
       JXDrawLine(display, menu->window, rootGC, 4,
-         menu->offsets[index] + 2, menu->width - 6,
-         menu->offsets[index] + 2);
+                 menu->offsets[index] + 2, menu->width - 6,
+                 menu->offsets[index] + 2);
       JXSetForeground(display, rootGC, colors[COLOR_MENU_UP]);
       JXDrawLine(display, menu->window, rootGC, 4,
-         menu->offsets[index] + 3, menu->width - 6,
-         menu->offsets[index] + 3);
+                 menu->offsets[index] + 3, menu->width - 6,
+                 menu->offsets[index] + 3);
 
    }
 
@@ -838,8 +852,8 @@ void SetMenuOpacity(const char *str) {
    Assert(str);
 
    temp = atof(str);
-   if(temp <= 0.0 || temp > 1.0) {
-      Warning("invalid menu opacity: %s", str);
+   if(JUNLIKELY(temp <= 0.0 || temp > 1.0)) {
+      Warning(_("invalid menu opacity: %s"), str);
       temp = 1.0;
    }
    menuOpacity = (unsigned int)(temp * UINT_MAX);

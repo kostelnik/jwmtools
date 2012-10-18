@@ -68,7 +68,7 @@ void StartupClock() {
 
    for(clk = clocks; clk; clk = clk->next) {
       if(clk->cp->requestedWidth == 0) {
-         clk->cp->requestedWidth = GetStringWidth(FONT_CLOCK, clk->format) + 4;
+         clk->cp->requestedWidth = 1;
       }
       if(clk->cp->requestedHeight == 0) {
          clk->cp->requestedHeight = GetStringHeight(FONT_CLOCK) + 4;
@@ -107,7 +107,7 @@ void DestroyClock() {
 
 /** Create a clock tray component. */
 TrayComponentType *CreateClock(const char *format, const char *zone,
-   const char *command, int width, int height) {
+                               const char *command, int width, int height) {
 
    TrayComponentType *cp;
    ClockType *clk;
@@ -116,8 +116,8 @@ TrayComponentType *CreateClock(const char *format, const char *zone,
    clk->next = clocks;
    clocks = clk;
 
-   clk->mousex = 0;
-   clk->mousey = 0;
+   clk->mousex = -POPUP_DELTA;
+   clk->mousey = -POPUP_DELTA;
    clk->mouseTime.seconds = 0;
    clk->mouseTime.ms = 0;
    clk->userWidth = 0;
@@ -158,16 +158,10 @@ TrayComponentType *CreateClock(const char *format, const char *zone,
 /** Initialize a clock tray component. */
 void Create(TrayComponentType *cp) {
 
-   ClockType *clk;
-
    Assert(cp);
 
-   clk = (ClockType*)cp->object;
-
-   Assert(clk);
-
    cp->pixmap = JXCreatePixmap(display, rootWindow, cp->width, cp->height,
-      rootDepth);
+                               rootDepth);
 
    JXSetForeground(display, rootGC, colors[COLOR_CLOCK_BG]);
    JXFillRectangle(display, cp->pixmap, rootGC, 0, 0, cp->width, cp->height);
@@ -192,7 +186,7 @@ void Resize(TrayComponentType *cp) {
    }
 
    cp->pixmap = JXCreatePixmap(display, rootWindow, cp->width, cp->height,
-      rootDepth);
+                               rootDepth);
 
    clk->shortTime[0] = 0;
 
@@ -205,13 +199,7 @@ void Resize(TrayComponentType *cp) {
 /** Destroy a clock tray component. */
 void Destroy(TrayComponentType *cp) {
 
-   ClockType *clk;
-
    Assert(cp);
-
-   clk = (ClockType*)cp->object;
-
-   Assert(clk);
 
    if(cp->pixmap != None) {
       JXFreePixmap(display, cp->pixmap);
@@ -237,7 +225,7 @@ void ProcessClockButtonEvent(TrayComponentType *cp, int x, int y, int mask) {
 
 /** Process a motion event on a clock tray component. */
 void ProcessClockMotionEvent(TrayComponentType *cp,
-   int x, int y, int mask) {
+                             int x, int y, int mask) {
 
    ClockType *clk;
 
@@ -255,10 +243,7 @@ void SignalClock(const TimeType *now, int x, int y) {
 
    ClockType *cp;
    int shouldDraw;
-   char longTime[80];
-   time_t t;
-   struct tm *timeinfo;
-   size_t len;
+   const char *longTime;
 
    Assert(now);
 
@@ -280,12 +265,8 @@ void SignalClock(const TimeType *now, int x, int y) {
       if(abs(cp->mousex - x) < POPUP_DELTA
          && abs(cp->mousey - y) < POPUP_DELTA) {
          if(GetTimeDifference(now, &cp->mouseTime) >= popupDelay) {
-            time(&t);
-            timeinfo = localtime(&t);
-            len = strftime(longTime, sizeof(longTime), "%c", timeinfo);
-            if(len > 0) {
-               ShowPopup(x, y, longTime);
-            }
+            longTime = GetTimeString("%c", cp->zone);
+            ShowPopup(x, y, longTime);
          }
       }
 
@@ -315,8 +296,7 @@ void DrawClock(ClockType *clk, const TimeType *now, int x, int y) {
 
    /* Clear the area. */
    JXSetForeground(display, rootGC, colors[COLOR_CLOCK_BG]);
-   JXFillRectangle(display, cp->pixmap, rootGC, 0, 0,
-      cp->width, cp->height);
+   JXFillRectangle(display, cp->pixmap, rootGC, 0, 0, cp->width, cp->height);
 
    /* Determine if the clock is the right size. */
    width = GetStringWidth(FONT_CLOCK, shortTime);
@@ -325,9 +305,9 @@ void DrawClock(ClockType *clk, const TimeType *now, int x, int y) {
 
       /* Draw the clock. */
       RenderString(cp->pixmap, FONT_CLOCK, COLOR_CLOCK_FG,
-         cp->width / 2 - width / 2,
-         cp->height / 2 - GetStringHeight(FONT_CLOCK) / 2,
-         cp->width, NULL, shortTime);
+                   (cp->width - width) / 2,
+                   (cp->height - GetStringHeight(FONT_CLOCK)) / 2,
+                   cp->width, NULL, shortTime);
 
       UpdateSpecificTray(clk->cp->tray, clk->cp);
 

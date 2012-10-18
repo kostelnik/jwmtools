@@ -49,7 +49,7 @@ static GroupType *groups = NULL;
 static void ReleasePatternList(PatternListType *lp);
 static void ReleaseOptionList(OptionListType *lp);
 static void AddPattern(PatternListType **lp, const char *pattern,
-   MatchType match);
+                       MatchType match);
 static void ApplyGroup(const GroupType *gp, ClientNode *np);
 
 /** Initialize group data. */
@@ -127,10 +127,10 @@ void AddGroupClass(GroupType *gp, const char *pattern) {
 
    Assert(gp);
 
-   if(pattern) {
+   if(JLIKELY(pattern)) {
       AddPattern(&gp->patterns, pattern, MATCH_CLASS);
    } else {
-      Warning("invalid group class");
+      Warning(_("invalid group class"));
    }
 
 }
@@ -140,10 +140,10 @@ void AddGroupName(GroupType *gp, const char *pattern) {
 
    Assert(gp);
 
-   if(pattern) {
+   if(JLIKELY(pattern)) {
       AddPattern(&gp->patterns, pattern, MATCH_NAME);
    } else {
-      Warning("invalid group name");
+      Warning(_("invalid group name"));
    }
 
 }
@@ -199,24 +199,35 @@ void ApplyGroups(ClientNode *np) {
 
    PatternListType *lp;
    GroupType *gp;
+   char hasClass;
+   char hasName;
+   char matchesClass;
+   char matchesName;
 
    Assert(np);
 
    for(gp = groups; gp; gp = gp->next) {
+      hasClass = 0;
+      hasName = 0;
+      matchesClass = 0;
+      matchesName = 0;
       for(lp = gp->patterns; lp; lp = lp->next) {
          if(lp->match == MATCH_CLASS) {
             if(Match(lp->pattern, np->className)) {
-               ApplyGroup(gp, np);
-               break;
+               matchesClass = 1;
             }
+            hasClass = 1;
          } else if(lp->match == MATCH_NAME) {
             if(Match(lp->pattern, np->instanceName)) {
-               ApplyGroup(gp, np);
-               break;
+               matchesName = 1;
             }
+            hasName = 1;
          } else {
             Debug("invalid match in ApplyGroups: %d", lp->match);
          }
+      }
+      if(hasName == matchesName && hasClass == matchesClass) {
+         ApplyGroup(gp, np);
       }
    }
 
@@ -227,7 +238,7 @@ void ApplyGroup(const GroupType *gp, ClientNode *np) {
 
    OptionListType *lp;
    unsigned int temp;
-   float tempf;
+   double tempf;
 
    Assert(gp);
    Assert(np);
@@ -254,18 +265,18 @@ void ApplyGroup(const GroupType *gp, ClientNode *np) {
          break;
       case OPTION_LAYER:
          temp = atoi(lp->value);
-         if(temp <= LAYER_COUNT) {
+         if(JLIKELY(temp <= LAYER_COUNT)) {
             SetClientLayer(np, temp);
          } else {
-            Warning("invalid group layer: %s", lp->value);
+            Warning(_("invalid group layer: %s"), lp->value);
          }
          break;
       case OPTION_DESKTOP:
          temp = atoi(lp->value);
-         if(temp >= 1 && temp <= desktopCount) {
+         if(JLIKELY(temp >= 1 && temp <= desktopCount)) {
             np->state.desktop = temp - 1;
          } else {
-            Warning("invalid group desktop: %s", lp->value);
+            Warning(_("invalid group desktop: %s"), lp->value);
          }
          break;
       case OPTION_ICON:
@@ -286,11 +297,11 @@ void ApplyGroup(const GroupType *gp, ClientNode *np) {
          break;
       case OPTION_OPACITY:
          tempf = atof(lp->value);
-         if(tempf > 0.0 && tempf <= 1.0) {
+         if(JLIKELY(tempf > 0.0 && tempf <= 1.0)) {
             np->state.opacity = (unsigned int)(tempf * UINT_MAX);
             np->state.status |= STAT_OPACITY;
          } else {
-            Warning("invalid group opacity: %s", lp->value);
+            Warning(_("invalid group opacity: %s"), lp->value);
          }
          break;
       case OPTION_MAX_V:

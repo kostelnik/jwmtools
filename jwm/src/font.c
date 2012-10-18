@@ -68,15 +68,15 @@ void StartupFonts() {
          if(!fonts[x]) {
             fonts[x] = JXftFontOpenXlfd(display, rootScreen, fontNames[x]);
          }
-         if(!fonts[x]) {
-            Warning("could not load font: %s", fontNames[x]);
+         if(JUNLIKELY(!fonts[x])) {
+            Warning(_("could not load font: %s"), fontNames[x]);
          }
       }
       if(!fonts[x]) {
          fonts[x] = JXftFontOpenXlfd(display, rootScreen, DEFAULT_FONT);
       }
-      if(!fonts[x]) {
-         FatalError("could not load the default font: %s", DEFAULT_FONT);
+      if(JUNLIKELY(!fonts[x])) {
+         FatalError(_("could not load the default font: %s"), DEFAULT_FONT);
       }
    }
 
@@ -85,15 +85,15 @@ void StartupFonts() {
    for(x = 0; x < FONT_COUNT; x++) {
       if(fontNames[x]) {
          fonts[x] = JXLoadQueryFont(display, fontNames[x]);
-         if(!fonts[x] && fontNames[x]) {
-            Warning("could not load font: %s", fontNames[x]);
+         if(JUNLIKELY(!fonts[x] && fontNames[x])) {
+            Warning(_("could not load font: %s"), fontNames[x]);
          }
       }
       if(!fonts[x]) {
          fonts[x] = JXLoadQueryFont(display, DEFAULT_FONT);
       }
-      if(!fonts[x]) {
-         FatalError("could not load the default font: %s", DEFAULT_FONT);
+      if(JUNLIKELY(!fonts[x])) {
+         FatalError(_("could not load the default font: %s"), DEFAULT_FONT);
       }
    }
 
@@ -157,9 +157,9 @@ int GetStringWidth(FontType type, const char *str) {
    length = strlen(str);
 
    JXftTextExtentsUtf8(display, fonts[type], (const unsigned char*)str,
-      length, &extents);
+                       length, &extents);
 
-   return extents.width;
+   return extents.xOff;
 
 #else
 
@@ -183,8 +183,8 @@ int GetStringHeight(FontType type) {
 /** Set the font to use for a component. */
 void SetFont(FontType type, const char *value) {
 
-   if(!value) {
-      Warning("empty Font tag");
+   if(JUNLIKELY(!value)) {
+      Warning(_("empty Font tag"));
       return;
    }
 
@@ -268,7 +268,8 @@ void RenderString(Drawable d, FontType font, ColorType color,
    xd = XftDrawCreate(display, d, rootVisual, rootColormap);
    XftDrawSetClip(xd, renderRegion);
    JXftDrawStringUtf8(xd, GetXftColor(color), fonts[font],
-      x, y + fonts[font]->ascent, (const unsigned char*)output, len);
+                      x, y + fonts[font]->ascent,
+                      (const unsigned char*)output, len);
    XftDrawDestroy(xd);
 
 #else

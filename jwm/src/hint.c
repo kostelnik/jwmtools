@@ -89,6 +89,7 @@ static const AtomNode atomList[] = {
    { &atoms[ATOM_NET_ACTIVE_WINDOW],         "_NET_ACTIVE_WINDOW"          },
    { &atoms[ATOM_NET_WORKAREA],              "_NET_WORKAREA"               },
    { &atoms[ATOM_NET_SUPPORTING_WM_CHECK],   "_NET_SUPPORTING_WM_CHECK"    },
+   { &atoms[ATOM_NET_SHOWING_DESKTOP],       "_NET_SHOWING_DESKTOP"        },
    { &atoms[ATOM_NET_FRAME_EXTENTS],         "_NET_FRAME_EXTENTS"          },
    { &atoms[ATOM_NET_WM_DESKTOP],            "_NET_WM_DESKTOP"             },
    { &atoms[ATOM_NET_WM_STATE],              "_NET_WM_STATE"               },
@@ -99,6 +100,8 @@ static const AtomNode atomList[] = {
    { &atoms[ATOM_NET_WM_STATE_FULLSCREEN],   "_NET_WM_STATE_FULLSCREEN"    },
    { &atoms[ATOM_NET_WM_STATE_HIDDEN],       "_NET_WM_STATE_HIDDEN"        },
    { &atoms[ATOM_NET_WM_STATE_SKIP_TASKBAR], "_NET_WM_STATE_SKIP_TASKBAR"  },
+   { &atoms[ATOM_NET_WM_STATE_BELOW],        "_NET_WM_STATE_BELOW"         },
+   { &atoms[ATOM_NET_WM_STATE_ABOVE],        "_NET_WM_STATE_ABOVE"         },
    { &atoms[ATOM_NET_WM_ALLOWED_ACTIONS],    "_NET_WM_ALLOWED_ACTIONS"     },
    { &atoms[ATOM_NET_WM_ACTION_MOVE],        "_NET_WM_ACTION_MOVE"         },
    { &atoms[ATOM_NET_WM_ACTION_RESIZE],      "_NET_WM_ACTION_RESIZE"       },
@@ -110,6 +113,8 @@ static const AtomNode atomList[] = {
    { &atoms[ATOM_NET_WM_ACTION_CHANGE_DESKTOP],
       "_NET_WM_ACTION_CHANGE_DESKTOP"},
    { &atoms[ATOM_NET_WM_ACTION_CLOSE],       "_NET_WM_ACTION_CLOSE"        },
+   { &atoms[ATOM_NET_WM_ACTION_BELOW],       "_NET_WM_ACTION_BELOW"        },
+   { &atoms[ATOM_NET_WM_ACTION_ABOVE],       "_NET_WM_ACTION_ABOVE"        },
    { &atoms[ATOM_NET_CLOSE_WINDOW],          "_NET_CLOSE_WINDOW"           },
    { &atoms[ATOM_NET_MOVERESIZE_WINDOW],     "_NET_MOVERESIZE_WINDOW"      },
    { &atoms[ATOM_NET_WM_NAME],               "_NET_WM_NAME"                },
@@ -127,23 +132,16 @@ static const AtomNode atomList[] = {
    { &atoms[ATOM_NET_SYSTEM_TRAY_OPCODE],    "_NET_SYSTEM_TRAY_OPCODE"     },
    { &atoms[ATOM_NET_WM_WINDOW_OPACITY],     "_NET_WM_WINDOW_OPACITY"      },
 
-   { &atoms[ATOM_WIN_LAYER],                 "_WIN_LAYER"                  },
-   { &atoms[ATOM_WIN_STATE],                 "_WIN_STATE"                  },
-   { &atoms[ATOM_WIN_WORKSPACE],             "_WIN_WORKSPACE"              },
-   { &atoms[ATOM_WIN_WORKSPACE_COUNT],       "_WIN_WORKSPACE_COUNT"        },
-   { &atoms[ATOM_WIN_SUPPORTING_WM_CHECK],   "_WIN_SUPPORTING_WM_CHECK"    },
-   { &atoms[ATOM_WIN_PROTOCOLS],             "_WIN_PROTOCOLS"              },
-
    { &atoms[ATOM_MOTIF_WM_HINTS],            "_MOTIF_WM_HINTS"             },
 
    { &atoms[ATOM_JWM_RESTART],               "_JWM_RESTART"                },
-   { &atoms[ATOM_JWM_EXIT],                  "_JWM_EXIT"                   }
+   { &atoms[ATOM_JWM_EXIT],                  "_JWM_EXIT"                   },
+   { &atoms[ATOM_JWM_RELOAD],                "_JWM_RELOAD"                 }
 
 };
 
 static void WriteNetState(ClientNode *np);
 static void WriteNetAllowed(ClientNode *np);
-static void WriteWinState(ClientNode *np);
 static void ReadWMHints(Window win, ClientState *state);
 static void ReadMotifHints(Window win, ClientState *state);
 
@@ -192,14 +190,6 @@ void StartupHints() {
       XA_ATOM, 32, PropModeReplace, (unsigned char*)supported,
       LAST_NET_ATOM - FIRST_NET_ATOM + 1);
 
-   /* _WIN_PROTOCOLS */
-   for(x = FIRST_WIN_ATOM; x <= LAST_WIN_ATOM; x++) {
-      supported[x - FIRST_WIN_ATOM] = atoms[x];
-   }
-   JXChangeProperty(display, rootWindow, atoms[ATOM_WIN_PROTOCOLS],
-      XA_ATOM, 32, PropModeReplace, (unsigned char*)supported,
-      LAST_WIN_ATOM - FIRST_WIN_ATOM + 1);
-
    /* _NET_NUMBER_OF_DESKTOPS */
    SetCardinalAtom(rootWindow, ATOM_NET_NUMBER_OF_DESKTOPS, desktopCount);
 
@@ -246,11 +236,6 @@ void StartupHints() {
    SetWindowAtom(rootWindow, ATOM_NET_SUPPORTING_WM_CHECK, win);
    SetWindowAtom(win, ATOM_NET_SUPPORTING_WM_CHECK, win);
 
-   SetWindowAtom(rootWindow, ATOM_WIN_SUPPORTING_WM_CHECK, win);
-   SetWindowAtom(win, ATOM_WIN_SUPPORTING_WM_CHECK, win);
-
-   SetCardinalAtom(rootWindow, ATOM_WIN_WORKSPACE_COUNT, desktopCount);
-
    ReleaseStack(data);
 
 }
@@ -271,8 +256,6 @@ void ReadCurrentDesktop() {
    currentDesktop = 0;
 
    if(GetCardinalAtom(rootWindow, ATOM_NET_CURRENT_DESKTOP, &temp)) {
-      ChangeDesktop(temp);
-   } else if(GetCardinalAtom(rootWindow, ATOM_WIN_WORKSPACE, &temp)) {
       ChangeDesktop(temp);
    } else {
       ChangeDesktop(0);
@@ -337,7 +320,6 @@ void WriteState(ClientNode *np) {
 
    WriteNetState(np);
    WriteNetAllowed(np);
-   WriteWinState(np);
 
    /* Write the opacity. */
    if(np->state.opacity == UINT_MAX) {
@@ -355,7 +337,7 @@ void WriteState(ClientNode *np) {
 /** Write the net state hint for a client. */
 void WriteNetState(ClientNode *np) {
 
-   unsigned long values[6];
+   unsigned long values[8];
    int north, south, east, west;
    int index;
 
@@ -391,6 +373,12 @@ void WriteNetState(ClientNode *np) {
       values[index++] = atoms[ATOM_NET_WM_STATE_SKIP_TASKBAR];
    }
 
+   if(np->state.layer == LAYER_BELOW) {
+      values[index++] = atoms[ATOM_NET_WM_STATE_BELOW];
+   } else if(np->state.layer == LAYER_ABOVE) {
+      values[index++] = atoms[ATOM_NET_WM_STATE_ABOVE];
+   }
+
    JXChangeProperty(display, np->window, atoms[ATOM_NET_WM_STATE],
       XA_ATOM, 32, PropModeReplace, (unsigned char*)values, index);
 
@@ -410,7 +398,7 @@ void WriteNetState(ClientNode *np) {
 /** Write the allowed action property. */
 void WriteNetAllowed(ClientNode *np) {
 
-   unsigned long values[10];
+   unsigned long values[12];
    int index;
 
    Assert(np);
@@ -447,45 +435,11 @@ void WriteNetAllowed(ClientNode *np) {
    }
 
    values[index++] = atoms[ATOM_NET_WM_ACTION_STICK];
+   values[index++] = atoms[ATOM_NET_WM_ACTION_BELOW];
+   values[index++] = atoms[ATOM_NET_WM_ACTION_ABOVE];
 
    JXChangeProperty(display, np->window, atoms[ATOM_NET_WM_ALLOWED_ACTIONS],
       XA_ATOM, 32, PropModeReplace, (unsigned char*)values, index);
-
-}
-
-/** Write the win state hint for a client (GNOME). */
-void WriteWinState(ClientNode *np) {
-
-   unsigned long flags;
-
-   Assert(np);
-
-   if(!(np->state.status & STAT_MAPPED)) {
-      JXDeleteProperty(display, np->window, atoms[ATOM_WIN_STATE]);
-      return;
-   }
-
-   flags = 0;
-   if(np->state.status & STAT_STICKY) {
-      flags |= WIN_STATE_STICKY;
-   }
-   if(np->state.status & STAT_MINIMIZED) {
-      flags |= WIN_STATE_MINIMIZED;
-   }
-   if(np->state.status & STAT_HMAX) {
-      flags |= WIN_STATE_MAXIMIZED_HORIZ;
-   }
-   if(np->state.status & STAT_VMAX) {
-      flags |= WIN_STATE_MAXIMIZED_VERT;
-   }
-   if(np->state.status & STAT_NOLIST) {
-      flags |= WIN_STATE_HIDDEN;
-   }
-   if(np->state.status & STAT_SHADED) {
-      flags |= WIN_STATE_SHADED;
-   }
-
-   SetCardinalAtom(np->window, ATOM_WIN_STATE, flags);
 
 }
 
@@ -552,6 +506,10 @@ ClientState ReadWindowState(Window win) {
                result.status |= STAT_MINIMIZED;
             } else if(state[x] == atoms[ATOM_NET_WM_STATE_SKIP_TASKBAR]) {
                result.status |= STAT_NOLIST;
+            } else if(state[x] == atoms[ATOM_NET_WM_STATE_ABOVE]) {
+               result.layer = LAYER_ABOVE;
+            } else if(state[x] == atoms[ATOM_NET_WM_STATE_BELOW]) {
+               result.layer = LAYER_BELOW;
             }
          }
          if(maxHorz) {
@@ -580,14 +538,18 @@ ClientState ReadWindowState(Window win) {
          if(         state[x] == atoms[ATOM_NET_WM_WINDOW_TYPE_NORMAL]) {
             break;
          } else if(  state[x] == atoms[ATOM_NET_WM_WINDOW_TYPE_DESKTOP]) {
-            result.layer   = LAYER_BOTTOM;
+            if(result.layer == LAYER_NORMAL) {
+               result.layer   = LAYER_BOTTOM;
+            }
             result.border  = BORDER_NONE;
             result.status |= STAT_STICKY;
             result.status |= STAT_NOLIST;
             break;
          } else if(  state[x] == atoms[ATOM_NET_WM_WINDOW_TYPE_DOCK]) {
             result.border = BORDER_NONE;
-            result.layer = LAYER_TOP;
+            if(result.layer == LAYER_NORMAL) {
+               result.layer = LAYER_ABOVE;
+            }
             break;
          } else if(  state[x] == atoms[ATOM_NET_WM_WINDOW_TYPE_SPLASH]) {
             result.border = BORDER_NONE;
@@ -610,33 +572,6 @@ ClientState ReadWindowState(Window win) {
       result.opacity = card;
    }
 
-   /* _WIN_STATE */
-   if(GetCardinalAtom(win, ATOM_WIN_STATE, &card)) {
-      if(card & WIN_STATE_STICKY) {
-         result.status |= STAT_STICKY;
-      }
-      if(card & WIN_STATE_MINIMIZED) {
-         result.status |= STAT_MINIMIZED;
-      }
-      if(card & WIN_STATE_HIDDEN) {
-         result.status |= STAT_NOLIST;
-      }
-      if(card & WIN_STATE_SHADED) {
-         result.status |= STAT_SHADED;
-      }
-      if(card & WIN_STATE_MAXIMIZED_HORIZ) {
-         result.status |= STAT_HMAX;
-      }
-      if(card & WIN_STATE_MAXIMIZED_VERT) {
-         result.status |= STAT_VMAX;
-      }
-   }
-
-   /* _WIN_LAYER */
-   if(GetCardinalAtom(win, ATOM_WIN_LAYER, &card)) {
-      result.layer = card;
-   }
-
    return result;
 
 }
@@ -650,9 +585,11 @@ void ReadWMName(ClientNode *np) {
    Atom realType;
    int realFormat;
    unsigned char *name;
+#ifdef USE_XUTF8
    XTextProperty tprop;
    char **text_list;
    int tcount;
+#endif
 
    Assert(np);
 
@@ -669,6 +606,7 @@ void ReadWMName(ClientNode *np) {
       np->name = (char*)name;
    }
 
+#ifdef USE_XUTF8
    if(!np->name) {
       status = JXGetWindowProperty(display, np->window,
             XA_WM_NAME, 0, 1024, False, atoms[ATOM_COMPOUND_TEXT],
@@ -689,6 +627,7 @@ void ReadWMName(ClientNode *np) {
          JXFree(name);
       }
    }
+#endif
 
    if(!np->name) {
       if(JXFetchName(display, np->window, &np->name) == 0) {
@@ -746,7 +685,7 @@ ClientProtocolType ReadWMProtocols(Window w) {
    JXFree(p);
 
    return result;
-   
+
 }
 
 /** Read the "normal hints" for a client. */
@@ -789,8 +728,8 @@ void ReadWMNormalHints(ClientNode *np) {
          np->maxHeight = rootHeight;
       }
    } else {
-      np->maxWidth = rootWidth;
-      np->maxHeight = rootHeight;
+      np->maxWidth = MAX_WINDOW_WIDTH;
+      np->maxHeight = MAX_WINDOW_HEIGHT;
    }
 
    if(np->sizeFlags & PBaseSize) {
@@ -881,16 +820,19 @@ void ReadWMHints(Window win, ClientState *state) {
 
    wmhints = JXGetWMHints(display, win);
    if(wmhints) {
-      switch(wmhints->flags & StateHint) {
-      case IconicState:
-         state->status |= STAT_MINIMIZED;
-         break;
-      case WithdrawnState:
-      default:
-         if(!(state->status & (STAT_MINIMIZED | STAT_NOLIST))) {
-            state->status |= STAT_MAPPED;
+      if(wmhints->flags & StateHint) {
+         switch(wmhints->initial_state) {
+         case IconicState:
+            state->status |= STAT_MINIMIZED;
+            break;
+         case WithdrawnState:
+         default:
+            if(!(state->status & (STAT_MINIMIZED | STAT_NOLIST))) {
+               state->status |= STAT_MAPPED;
+            }
          }
-         break;
+      } else {
+         state->status |= STAT_MAPPED;
       }
       JXFree(wmhints);
    } else {

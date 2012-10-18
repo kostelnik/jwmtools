@@ -291,6 +291,7 @@ int ShouldGrab(KeyType key) {
    case KEY_EXEC:
    case KEY_RESTART:
    case KEY_EXIT:
+   case KEY_FULLSCREEN:
       return 1;
    default:
       return 0;
@@ -317,8 +318,8 @@ unsigned int GetModifierMask(XModifierKeymap *modmap, KeySym key) {
    int x;
 
    temp = JXKeysymToKeycode(display, key);
-   if(temp == 0) {
-      Warning("Specified KeySym is not defined for any KeyCode");
+   if(JUNLIKELY(temp == 0)) {
+      Warning(_("Specified KeySym is not defined for any KeyCode"));
    }
    for(x = 0; x < 8 * modmap->max_keypermod; x++) {
       if(modmap->modifiermap[x] == temp) {
@@ -326,7 +327,7 @@ unsigned int GetModifierMask(XModifierKeymap *modmap, KeySym key) {
       }
    }
 
-   Warning("modifier not found for keysym 0x%0x", key);
+   Warning(_("modifier not found for keysym 0x%0x"), key);
 
    return 0;
 
@@ -355,8 +356,8 @@ unsigned int ParseModifierString(const char *str) {
          }
       }
 
-      if(!found) {
-         Warning("invalid modifier: \"%c\"", str[x]);
+      if(JUNLIKELY(!found)) {
+         Warning(_("invalid modifier: \"%c\""), str[x]);
       }
 
    }
@@ -371,8 +372,8 @@ KeySym ParseKeyString(const char *str) {
    KeySym symbol;
 
    symbol = JXStringToKeysym(str);
-   if(symbol == NoSymbol) {
-      Warning("invalid key symbol: \"%s\"", str);
+   if(JUNLIKELY(symbol == NoSymbol)) {
+      Warning(_("invalid key symbol: \"%s\""), str);
    }
 
    return symbol;
@@ -453,7 +454,7 @@ void InsertBinding(KeyType key, const char *modifiers,
 
    } else {
 
-      Warning("neither key nor keycode specified for Key");
+      Warning(_("neither key nor keycode specified for Key"));
       np = NULL;
 
    }
@@ -469,8 +470,8 @@ void ValidateKeys() {
    for(kp = bindings; kp; kp = kp->next) {
       if((kp->key & 0xFF) == KEY_ROOT && kp->command) {
          bindex = atoi(kp->command);
-         if(!IsRootMenuDefined(bindex)) {
-            Warning("key binding: root menu %d not defined", bindex);
+         if(JUNLIKELY(!IsRootMenuDefined(bindex))) {
+            Warning(_("key binding: root menu %d not defined"), bindex);
          }
       }
    }

@@ -31,7 +31,7 @@ typedef struct {
    int top, bottom;
 } RectangleType;
 
-static int shouldStopMove;
+static char shouldStopMove;
 static SnapModeType snapMode = SNAP_BORDER;
 static int snapDistance = DEFAULT_SNAP_DISTANCE;
 
@@ -78,9 +78,9 @@ void SetSnapDistance(const char *value) {
    Assert(value);
 
    temp = atoi(value);
-   if(temp > MAX_SNAP_DISTANCE || temp < MIN_SNAP_DISTANCE) {
+   if(JUNLIKELY(temp > MAX_SNAP_DISTANCE || temp < MIN_SNAP_DISTANCE)) {
       snapDistance = DEFAULT_SNAP_DISTANCE;
-      Warning("invalid snap distance specified: %d", temp);
+      Warning(_("invalid snap distance specified: %d"), temp);
    } else {
       snapDistance = temp;
    }
@@ -108,7 +108,7 @@ void MoveController(int wasDestroyed) {
 }
 
 /** Move a client window. */
-int MoveClient(ClientNode *np, int startx, int starty) {
+int MoveClient(ClientNode *np, int startx, int starty, int snap) {
 
    XEvent event;
    int oldx, oldy;
@@ -173,41 +173,43 @@ int MoveClient(ClientNode *np, int startx, int starty) {
             if(LeftDesktop()) {
                SetClientDesktop(np, currentDesktop);
                RestackClients();
-               DiscardMotionEvents(&event, np->window);
                np->x = rootWidth - 2 - startx;
                np->y = event.xmotion.y_root - starty;
                MoveMouse(rootWindow, np->x + startx, np->y + starty);
+               DiscardMotionEvents(&event, np->window);
             }
          } else if(event.xmotion.x_root == rootWidth - 1) {
             if(RightDesktop()) {
                SetClientDesktop(np, currentDesktop);
                RestackClients();
-               DiscardMotionEvents(&event, np->window);
                np->x = 1 - startx;
                np->y = event.xmotion.y_root - starty;
                MoveMouse(rootWindow, np->x + startx, np->y + starty);
+               DiscardMotionEvents(&event, np->window);
             }
          } else if(event.xmotion.y_root == 0) {
             if(AboveDesktop()) {
                SetClientDesktop(np, currentDesktop);
                RestackClients();
-               DiscardMotionEvents(&event, np->window);
                np->x = event.xmotion.x_root - startx;
                np->y = rootHeight - 2 - starty;
                MoveMouse(rootWindow, np->x + startx, np->y + starty);
+               DiscardMotionEvents(&event, np->window);
             }
          } else if(event.xmotion.y_root == rootHeight - 1) {
             if(BelowDesktop()) {
                SetClientDesktop(np, currentDesktop);
                RestackClients();
-               DiscardMotionEvents(&event, np->window);
                np->x = event.xmotion.x_root - startx;
                np->y = 1 - starty;
                MoveMouse(rootWindow, np->x + startx, np->y + starty);
+               DiscardMotionEvents(&event, np->window);
             }
          }
 
-         DoSnap(np);
+         if(snap) {
+            DoSnap(np);
+         }
 
          if(!doMove && (abs(np->x - oldx) > MOVE_DELTA
             || abs(np->y - oldy) > MOVE_DELTA)) {
@@ -284,8 +286,8 @@ int MoveClientKeyboard(ClientNode *np) {
    }
 
    GrabMouseForMove();
-   if(JXGrabKeyboard(display, np->window, True, GrabModeAsync,
-      GrabModeAsync, CurrentTime) != GrabSuccess) {
+   if(JUNLIKELY(JXGrabKeyboard(display, np->window, True, GrabModeAsync,
+      GrabModeAsync, CurrentTime) != GrabSuccess)) {
       Debug("could not grab keyboard for client move");
       return 0;
    }
@@ -325,6 +327,7 @@ int MoveClientKeyboard(ClientNode *np) {
       if(event.type == KeyPress) {
 
          while(JXCheckTypedWindowEvent(display, np->window, KeyPress, &event));
+         UpdateTime(&event);
 
          switch(GetKey(&event.xkey) & 0xFF) {
          case KEY_UP:
@@ -354,13 +357,15 @@ int MoveClientKeyboard(ClientNode *np) {
 
          MoveMouse(rootWindow, np->x, np->y);
          JXCheckTypedWindowEvent(display, np->window, MotionNotify, &event);
+         UpdateTime(&event);
 
          moved = 1;
 
       } else if(event.type == MotionNotify) {
 
          while(JXCheckTypedWindowEvent(display, np->window,
-            MotionNotify, &event));
+                                       MotionNotify, &event));
+         UpdateTime(&event);
 
          np->x = event.xmotion.x;
          np->y = event.xmotion.y;
@@ -396,7 +401,7 @@ int MoveClientKeyboard(ClientNode *np) {
 
 /** Stop move. */
 void StopMove(ClientNode *np, int doMove,
-   int oldx, int oldy, int hmax, int vmax) {
+              int oldx, int oldy, int hmax, int vmax) {
 
    int north, south, east, west;
 

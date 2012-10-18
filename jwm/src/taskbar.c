@@ -70,7 +70,6 @@ static Node *taskBarNodesTail;
 
 static Node *GetNode(TaskBarType *bar, int x);
 static unsigned int GetItemCount();
-static int ShouldShowItem(const ClientNode *np);
 static unsigned int GetItemWidth(const TaskBarType *bp,
    unsigned int itemCount);
 static void Render(const TaskBarType *bp);
@@ -95,7 +94,7 @@ void InitializeTaskBar() {
 /** Startup the task bar. */
 void StartupTaskBar() {
    minimizedPixmap = JXCreateBitmapFromData(display, rootWindow,
-      minimized_bitmap, 4, 4);
+                                            minimized_bitmap, 4, 4);
 }
 
 /** Shutdown the task bar. */
@@ -134,8 +133,8 @@ TrayComponentType *CreateTaskBar() {
    bars = tp;
    tp->itemHeight = 0;
    tp->layout = LAYOUT_HORIZONTAL;
-   tp->mousex = -1;
-   tp->mousey = -1;
+   tp->mousex = -POPUP_DELTA;
+   tp->mousey = -POPUP_DELTA;
    tp->mouseTime.seconds = 0;
    tp->mouseTime.ms = 0;
    tp->maxItemWidth = 0;
@@ -300,7 +299,7 @@ void ShowTaskWindowMenu(TaskBarType *bar, Node *np) {
 
    GetWindowMenuSize(np->client, &mwidth, &mheight);
 
-   sp = GetCurrentScreen(x, y);
+   sp = GetCurrentScreen(bar->cp->screenx, bar->cp->screeny);
 
    if(bar->layout == LAYOUT_HORIZONTAL) {
       GetMousePosition(&x, &y);
@@ -452,7 +451,6 @@ void Render(const TaskBarType *bp) {
    int remainder;
    int itemWidth, itemCount;
    int width, height;
-   int iconSize;
    Pixmap buffer;
    GC gc;
    char *minimizedName;
@@ -489,13 +487,11 @@ void Render(const TaskBarType *bp) {
       remainder = 0;
    }
 
-   iconSize = bp->itemHeight - 2 * TASK_SPACER - 4;
-
    ResetButton(&button, buffer, gc);
    button.font = FONT_TASK;
 
    for(tp = taskBarNodes; tp; tp = tp->next) {
-      if(ShouldShowItem(tp->client)) {
+      if(ShouldFocus(tp->client)) {
 
          tp->y = y;
 
@@ -654,7 +650,7 @@ Node *GetNode(TaskBarType *bar, int x) {
       remainder = width - itemWidth * itemCount;
 
       for(tp = taskBarNodes; tp; tp = tp->next) {
-         if(ShouldShowItem(tp->client)) {
+         if(ShouldFocus(tp->client)) {
             if(remainder) {
                stop = index + itemWidth + 1;
                --remainder;
@@ -671,7 +667,7 @@ Node *GetNode(TaskBarType *bar, int x) {
    } else {
 
       for(tp = taskBarNodes; tp; tp = tp->next) {
-         if(ShouldShowItem(tp->client)) {
+         if(ShouldFocus(tp->client)) {
             stop = index + bar->itemHeight;
             if(x >= index && x < stop) {
                return tp;
@@ -694,40 +690,12 @@ unsigned int GetItemCount() {
 
    count = 0;
    for(tp = taskBarNodes; tp; tp = tp->next) {
-      if(ShouldShowItem(tp->client)) {
+      if(ShouldFocus(tp->client)) {
          ++count;
       }
    }
 
    return count;
-
-}
-
-/** Determine if a client should be shown on the task bar. */
-int ShouldShowItem(const ClientNode *np) {
-
-   /* Only display clients on the current desktop or clients that are sticky. */
-   if(np->state.desktop != currentDesktop
-      && !(np->state.status & STAT_STICKY)) {
-      return 0;
-   }
-
-   /* Don't display a client if it doesn't want to be displayed. */
-   if(np->state.status & STAT_NOLIST) {
-      return 0;
-   }
-
-   /* Don't display a client on the tray if it has an owner. */
-   if(np->owner != None) {
-      return 0;
-   }
-
-   if(   !(np->state.status & STAT_MAPPED)
-      && !(np->state.status & (STAT_MINIMIZED | STAT_SHADED))) {
-      return 0;
-   }
-
-   return 1;
 
 }
 
@@ -765,8 +733,8 @@ void SetMaxTaskBarItemWidth(TrayComponentType *cp, const char *value) {
 
    if(value) {
       temp = atoi(value);
-      if(temp < 0) {
-         Warning("invalid maxwidth for TaskList: %s", value);
+      if(JUNLIKELY(temp < 0)) {
+         Warning(_("invalid maxwidth for TaskList: %s"), value);
          return;
       }
       bp = (TaskBarType*)cp->object;
@@ -788,7 +756,7 @@ void SetTaskBarInsertMode(const char *mode) {
    } else if(!strcmp(mode, "left")) {
       insertMode = INSERT_LEFT;
    } else {
-      Warning("invalid insert mode: \"%s\"", mode);
+      Warning(_("invalid insert mode: \"%s\""), mode);
       insertMode = INSERT_RIGHT;
    }
 

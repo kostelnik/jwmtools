@@ -132,8 +132,8 @@ void SetBackground(int desktop, const char *type, const char *value) {
    BackgroundNode *bp;
 
    /* Make sure we have a value. */
-   if(!value) {
-      Warning("no value specified for background");
+   if(JUNLIKELY(!value)) {
+      Warning(_("no value specified for background"));
       return;
    }
 
@@ -149,7 +149,7 @@ void SetBackground(int desktop, const char *type, const char *value) {
    } else if(!strcmp(type, "tile")) {
       bgType = BACKGROUND_TILE;
    } else {
-      Warning("invalid background type: \"%s\"", type);
+      Warning(_("invalid background type: \"%s\""), type);
       return;
    }
 
@@ -226,7 +226,7 @@ void LoadSolidBackground(BackgroundNode *bp) {
 
    /* Create the window. */
    bp->window = JXCreateSimpleWindow(display, rootWindow, 0, 0,
-      rootWidth, rootHeight, 0, 0, 0);
+                                     rootWidth, rootHeight, 0, 0, 0);
 
    /* Create the pixmap. */
    bp->pixmap = JXCreatePixmap(display, bp->window, 1, 1, rootDepth);
@@ -270,15 +270,15 @@ void LoadGradientBackground(BackgroundNode *bp) {
 
    /* Create the window. */
    bp->window = JXCreateSimpleWindow(display, rootWindow, 0, 0,
-      rootWidth, rootHeight, 0, 0, 0);
+                                     rootWidth, rootHeight, 0, 0, 0);
 
    bp->pixmap = JXCreatePixmap(display, bp->window,
-      rootWidth, rootHeight, rootDepth);
+                               rootWidth, rootHeight, rootDepth);
 
    if(color1.pixel == color2.pixel) {
       JXSetForeground(display, rootGC, color1.pixel);
       JXFillRectangle(display, bp->pixmap, rootGC,
-         0, 0, rootWidth, rootHeight);
+                      0, 0, rootWidth, rootHeight);
    } else {
       DrawHorizontalGradient(bp->pixmap, rootGC,
          color1.pixel, color2.pixel, 0, 0, rootWidth, rootHeight);
@@ -295,10 +295,10 @@ void LoadImageBackground(BackgroundNode *bp) {
    /* Load the icon. */
    ExpandPath(&bp->value);
    ip = LoadNamedIcon(bp->value);
-   if(!ip) {
+   if(JUNLIKELY(!ip)) {
       bp->pixmap = None;
       bp->window = None;
-      Warning("background image not found: \"%s\"", bp->value);
+      Warning(_("background image not found: \"%s\""), bp->value);
       return;
    }
 
@@ -316,11 +316,11 @@ void LoadImageBackground(BackgroundNode *bp) {
 
    /* Create the window. */
    bp->window = JXCreateSimpleWindow(display, rootWindow, 0, 0,
-      rootWidth, rootHeight, 0, 0, 0);
+                                     rootWidth, rootHeight, 0, 0, 0);
 
    /* Create the pixmap. */
    bp->pixmap = JXCreatePixmap(display, bp->window,
-      width, height, rootDepth);
+                               width, height, rootDepth);
 
    /* Clear the pixmap in case it is too small. */
    JXSetForeground(display, rootGC, 0);

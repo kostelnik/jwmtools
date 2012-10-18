@@ -38,6 +38,7 @@
 #include "popup.h"
 #include "status.h"
 #include "background.h"
+#include "spacer.h"
 
 /** Structure to map key names to key types. */
 typedef struct KeyMapType {
@@ -74,6 +75,7 @@ static const KeyMapType KEY_MAP[] = {
    { "ddesktop",    KEY_DDESKTOP     },
    { "showdesktop", KEY_SHOWDESK     },
    { "showtray",    KEY_SHOWTRAY     },
+   { "fullscreen",  KEY_FULLSCREEN   },
    { NULL,          KEY_NONE         }
 };
 
@@ -157,6 +159,7 @@ static void ParseSwallow(const TokenNode *tp, TrayType *tray);
 static void ParseTrayButton(const TokenNode *tp, TrayType *tray);
 static void ParseClock(const TokenNode *tp, TrayType *tray);
 static void ParseDock(const TokenNode *tp, TrayType *tray);
+static void ParseSpacer(const TokenNode *tp, TrayType *tray);
 
 /* Groups. */
 static void ParseGroup(const TokenNode *tp);
@@ -191,7 +194,7 @@ static void ParseError(const TokenNode *tp, const char *str, ...);
 /** Parse the JWM configuration. */
 void ParseConfig(const char *fileName) {
    if(!ParseFile(fileName, 0)) {
-      if(!ParseFile(SYSTEM_CONFIG, 0)) {
+      if(JUNLIKELY(!ParseFile(SYSTEM_CONFIG, 0))) {
          ParseError(NULL, "could not open %s or %s", fileName, SYSTEM_CONFIG);
       }
    }
@@ -210,7 +213,7 @@ int ParseFile(const char *fileName, int depth) {
    char *buffer;
 
    ++depth;
-   if(depth > MAX_INCLUDE_DEPTH) {
+   if(JUNLIKELY(depth > MAX_INCLUDE_DEPTH)) {
       ParseError(NULL, "include depth (%d) exceeded", MAX_INCLUDE_DEPTH);
       return 0;
    }
@@ -284,96 +287,109 @@ void Parse(const TokenNode *start, int depth) {
       return;
    }
 
-   if(start->type == TOK_JWM) {
+   if(JLIKELY(start->type == TOK_JWM)) {
       for(tp = start->subnodeHead; tp; tp = tp->next) {
-         switch(tp->type) {
-         case TOK_DESKTOPS:
-            ParseDesktops(tp);
-            break;
-         case TOK_DOUBLECLICKSPEED:
-            SetDoubleClickSpeed(tp->value);
-            break;
-         case TOK_DOUBLECLICKDELTA:
-            SetDoubleClickDelta(tp->value);
-            break;
-         case TOK_FOCUSMODEL:
-            ParseFocusModel(tp);
-            break;
-         case TOK_GROUP:
-            ParseGroup(tp);
-            break;
-         case TOK_ICONPATH:
-            AddIconPath(tp->value);
-            break;
-         case TOK_INCLUDE:
-            ParseInclude(tp, depth);
-            break;
-         case TOK_KEY:
-            ParseKey(tp);
-            break;
-         case TOK_MENUSTYLE:
-            ParseMenuStyle(tp);
-            break;
-         case TOK_MOVEMODE:
-            ParseMoveMode(tp);
-            break;
-         case TOK_PAGERSTYLE:
-            ParsePagerStyle(tp);
-            break;
-         case TOK_POPUPSTYLE:
-            ParsePopupStyle(tp);
-            break;
-         case TOK_RESIZEMODE:
-            ParseResizeMode(tp);
-            break;
-         case TOK_RESTARTCOMMAND:
-            AddRestartCommand(tp->value);
-            break;
-         case TOK_ROOTMENU:
-            ParseRootMenu(tp);
-            break;
-         case TOK_SHUTDOWNCOMMAND:
-            AddShutdownCommand(tp->value);
-            break;
-         case TOK_SNAPMODE:
-            ParseSnapMode(tp);
-            break;
-         case TOK_STARTUPCOMMAND:
-            AddStartupCommand(tp->value);
-            break;
-         case TOK_TASKLISTSTYLE:
-            ParseTaskListStyle(tp);
-            break;
-         case TOK_TRAY:
-            ParseTray(tp);
-            break;
-         case TOK_TRAYSTYLE:
-            ParseTrayStyle(tp);
-            break;
-         case TOK_TRAYBUTTONSTYLE:
-            ParseTrayButtonStyle(tp);
-            break;
-         case TOK_CLOCKSTYLE:
-            ParseClockStyle(tp);
-            break;
-         case TOK_WINDOWSTYLE:
-            ParseWindowStyle(tp);
-            break;
-         case TOK_BUTTONCLOSE:
-            SetButtonMask(BP_CLOSE, tp->value);
-            break;
-         case TOK_BUTTONMIN:
-            SetButtonMask(BP_MINIMIZE, tp->value);
-            break;
-         case TOK_BUTTONMAX:
-            SetButtonMask(BP_MAXIMIZE, tp->value);
-            break;
-         case TOK_BUTTONMAXACTIVE:
-            SetButtonMask(BP_MAXIMIZE_ACTIVE, tp->value);
-            break;
-         default:
-            InvalidTag(tp, TOK_JWM);
-            break;
+         if(shouldReload) {
+            switch(tp->type) {
+            case TOK_ROOTMENU:
+               ParseRootMenu(tp);
+               break;
+            case TOK_INCLUDE:
+               ParseInclude(tp, depth);
+               break;
+            default:
+               break;
+            }
+         } else {
+            switch(tp->type) {
+            case TOK_DESKTOPS:
+               ParseDesktops(tp);
+               break;
+            case TOK_DOUBLECLICKSPEED:
+               SetDoubleClickSpeed(tp->value);
+               break;
+            case TOK_DOUBLECLICKDELTA:
+               SetDoubleClickDelta(tp->value);
+               break;
+            case TOK_FOCUSMODEL:
+               ParseFocusModel(tp);
+               break;
+            case TOK_GROUP:
+               ParseGroup(tp);
+               break;
+            case TOK_ICONPATH:
+               AddIconPath(tp->value);
+               break;
+            case TOK_INCLUDE:
+               ParseInclude(tp, depth);
+               break;
+            case TOK_KEY:
+               ParseKey(tp);
+               break;
+            case TOK_MENUSTYLE:
+               ParseMenuStyle(tp);
+               break;
+            case TOK_MOVEMODE:
+               ParseMoveMode(tp);
+               break;
+            case TOK_PAGERSTYLE:
+               ParsePagerStyle(tp);
+               break;
+            case TOK_POPUPSTYLE:
+               ParsePopupStyle(tp);
+               break;
+            case TOK_RESIZEMODE:
+               ParseResizeMode(tp);
+               break;
+            case TOK_RESTARTCOMMAND:
+               AddRestartCommand(tp->value);
+               break;
+            case TOK_ROOTMENU:
+               ParseRootMenu(tp);
+               break;
+            case TOK_SHUTDOWNCOMMAND:
+               AddShutdownCommand(tp->value);
+               break;
+            case TOK_SNAPMODE:
+               ParseSnapMode(tp);
+               break;
+            case TOK_STARTUPCOMMAND:
+               AddStartupCommand(tp->value);
+               break;
+            case TOK_TASKLISTSTYLE:
+               ParseTaskListStyle(tp);
+               break;
+            case TOK_TRAY:
+               ParseTray(tp);
+               break;
+            case TOK_TRAYSTYLE:
+               ParseTrayStyle(tp);
+               break;
+            case TOK_TRAYBUTTONSTYLE:
+               ParseTrayButtonStyle(tp);
+               break;
+            case TOK_CLOCKSTYLE:
+               ParseClockStyle(tp);
+               break;
+            case TOK_WINDOWSTYLE:
+               ParseWindowStyle(tp);
+               break;
+            case TOK_BUTTONCLOSE:
+               SetButtonMask(BP_CLOSE, tp->value);
+               break;
+            case TOK_BUTTONMIN:
+               SetButtonMask(BP_MINIMIZE, tp->value);
+               break;
+            case TOK_BUTTONMAX:
+               SetButtonMask(BP_MAXIMIZE, tp->value);
+               break;
+            case TOK_BUTTONMAXACTIVE:
+               SetButtonMask(BP_MAXIMIZE_ACTIVE, tp->value);
+               break;
+            default:
+               InvalidTag(tp, TOK_JWM);
+               break;
+            }
          }
       }
    } else {
@@ -384,7 +400,7 @@ void Parse(const TokenNode *start, int depth) {
 
 /** Parse focus model. */
 void ParseFocusModel(const TokenNode *tp) {
-   if(tp->value) {
+   if(JLIKELY(tp->value)) {
       if(!strcmp(tp->value, "sloppy")) {
          focusModel = FOCUS_SLOPPY;
       } else if(!strcmp(tp->value, "click")) {
@@ -409,7 +425,7 @@ void ParseSnapMode(const TokenNode *tp) {
       SetDefaultSnapDistance();
    }
 
-   if(tp->value) {
+   if(JLIKELY(tp->value)) {
       if(!strcmp(tp->value, "none")) {
          SetSnapMode(SNAP_NONE);
       } else if(!strcmp(tp->value, "screen")) {
@@ -432,7 +448,7 @@ void ParseMoveMode(const TokenNode *tp) {
    str = FindAttribute(tp->attributes, COORDINATES_ATTRIBUTE);
    SetMoveStatusType(str);
 
-   if(tp->value) {
+   if(JLIKELY(tp->value)) {
       if(!strcmp(tp->value, "outline")) {
          SetMoveMode(MOVE_OUTLINE);
       } else if(!strcmp(tp->value, "opaque")) {
@@ -454,7 +470,7 @@ void ParseResizeMode(const TokenNode *tp) {
    str = FindAttribute(tp->attributes, COORDINATES_ATTRIBUTE);
    SetResizeStatusType(str);
 
-   if(tp->value) {
+   if(JLIKELY(tp->value)) {
       if(!strcmp(tp->value, "outline")) {
          SetResizeMode(RESIZE_OUTLINE);
       } else if(!strcmp(tp->value, "opaque")) {
@@ -746,7 +762,7 @@ MenuItem *ParseMenuInclude(const TokenNode *tp, Menu *menu,
       ExpandPath(&path);
 
       fd = popen(path, "r");
-      if(fd) {
+      if(JLIKELY(fd)) {
          buffer = ReadFile(fd);
          pclose(fd);
       } else {
@@ -759,7 +775,7 @@ MenuItem *ParseMenuInclude(const TokenNode *tp, Menu *menu,
       ExpandPath(&path);
 
       fd = fopen(path, "r");
-      if(fd) {
+      if(JLIKELY(fd)) {
          buffer = ReadFile(fd);
          fclose(fd);
       } else {
@@ -777,7 +793,7 @@ MenuItem *ParseMenuInclude(const TokenNode *tp, Menu *menu,
    Release(buffer);
    Release(path);
 
-   if(!start || start->type != TOK_JWM) {
+   if(JUNLIKELY(!start || start->type != TOK_JWM)) {
       ParseError(tp, "invalid included menu: %s", tp->value);
    } else {
       last = ParseMenuItem(start->subnodeHead, menu, last);
@@ -809,7 +825,7 @@ void ParseKey(const TokenNode *tp) {
    code = FindAttribute(tp->attributes, "keycode");
 
    action = tp->value;
-   if(action == NULL) {
+   if(JUNLIKELY(action == NULL)) {
       ParseError(tp, "no action specified for Key");
       return;
    }
@@ -832,7 +848,7 @@ void ParseKey(const TokenNode *tp) {
    }
 
    /* Insert the binding if it's valid. */
-   if(k == KEY_NONE) {
+   if(JUNLIKELY(k == KEY_NONE)) {
 
       ParseError(tp, "invalid Key action: \"%s\"", action);
 
@@ -940,7 +956,7 @@ void ParseInclude(const TokenNode *tp, int depth) {
 
    Assert(tp);
 
-   if(!tp->value) {
+   if(JUNLIKELY(!tp->value)) {
 
       ParseError(tp, "no include file specified");
 
@@ -950,7 +966,7 @@ void ParseInclude(const TokenNode *tp, int depth) {
 
       ExpandPath(&temp);
 
-      if(!ParseFile(temp, depth)) {
+      if(JUNLIKELY(!ParseFile(temp, depth))) {
          ParseError(tp, "could not open included file %s", temp);
       }
 
@@ -1170,6 +1186,9 @@ void ParseTray(const TokenNode *tp) {
       case TOK_DOCK:
          ParseDock(np, tray);
          break;
+      case TOK_SPACER:
+         ParseSpacer(np, tray);
+         break;
       default:
          InvalidTag(np, TOK_TRAY);
          break;
@@ -1330,7 +1349,7 @@ void ParseClock(const TokenNode *tp, TrayType *tray) {
    }
 
    cp = CreateClock(format, zone, command, width, height);
-   if(cp) {
+   if(JLIKELY(cp)) {
       AddTrayComponent(tray, cp);
    }
 
@@ -1340,12 +1359,56 @@ void ParseClock(const TokenNode *tp, TrayType *tray) {
 void ParseDock(const TokenNode *tp, TrayType *tray) {
 
    TrayComponentType *cp;
+   int width;
+   char *str;
 
    Assert(tp);
    Assert(tray);
 
-   cp = CreateDock();
-   if(cp) {
+   str = FindAttribute(tp->attributes, WIDTH_ATTRIBUTE);
+   if(str) {
+      width = atoi(str);
+   } else {
+      width = 0;
+   }
+
+   cp = CreateDock(width);
+   if(JLIKELY(cp)) {
+      AddTrayComponent(tray, cp);
+   }
+
+}
+
+/** Parse a spacer tray component. */
+void ParseSpacer(const TokenNode *tp, TrayType *tray) {
+
+   TrayComponentType *cp;
+   int width;
+   int height;
+   char *str;
+
+   Assert(tp);
+   Assert(tray);
+
+   /* Get the width. */
+   str = FindAttribute(tp->attributes, WIDTH_ATTRIBUTE);
+   if(str) {
+      width = atoi(str);
+   } else {
+      width = 0;
+   }
+
+   /* Get the height. */
+   str = FindAttribute(tp->attributes, HEIGHT_ATTRIBUTE);
+   if(str) {
+      height = atoi(str);
+   } else {
+      height = 0;
+   }
+
+   /* Create the spacer. */
+   cp = CreateSpacer(width, height);
+   if(JLIKELY(cp)) {
       AddTrayComponent(tray, cp);
    }
 
@@ -1672,8 +1735,8 @@ char *ReadFile(FILE *fd) {
 /** Display an invalid tag error message. */
 void InvalidTag(const TokenNode *tp, TokenType parent) {
 
-   ParseError(tp, "invalid tag in %s: %s",
-      GetTokenTypeName(parent), GetTokenName(tp));
+   ParseError(tp, _("invalid tag in %s: %s"),
+              GetTokenTypeName(parent), GetTokenName(tp));
 
 }
 
@@ -1682,7 +1745,6 @@ void ParseError(const TokenNode *tp, const char *str, ...) {
 
    va_list ap;
 
-   static const char *NULL_MESSAGE = "configuration error";
    static const char *FILE_MESSAGE = "%s[%d]";
 
    char *msg;
@@ -1693,7 +1755,7 @@ void ParseError(const TokenNode *tp, const char *str, ...) {
       msg = Allocate(strlen(FILE_MESSAGE) + strlen(tp->fileName) + 1);
       sprintf(msg, FILE_MESSAGE, tp->fileName, tp->line);
    } else {
-      msg = CopyString(NULL_MESSAGE);
+      msg = CopyString(_("configuration error"));
    }
 
    WarningVA(msg, str, ap);

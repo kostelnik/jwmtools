@@ -54,6 +54,8 @@ unsigned long GetTimeDifference(const TimeType *t1, const TimeType *t2) {
 /** Get the current time. */
 const char *GetTimeString(const char *format, const char *zone) {
 
+   static char saveTZ[256];
+   static char newTZ[256];
    static char str[80];
    time_t t;
 
@@ -62,19 +64,27 @@ const char *GetTimeString(const char *format, const char *zone) {
    time(&t);
 
    if(zone) {
-      char saveTZ[256] = "";
-      char *oldTZ = getenv("TZ");
+      const char *oldTZ = getenv("TZ");
       if(oldTZ) {
-         strncpy(saveTZ, oldTZ, sizeof(saveTZ));
+         snprintf(saveTZ, sizeof(saveTZ), "TZ=%s", oldTZ);
+#ifndef HAVE_UNSETENV
+      } else {
+         strcpy(saveTZ, "TZ=");
+#endif
       }
-      setenv("TZ", zone, 1);
+      snprintf(newTZ, sizeof(newTZ), "TZ=%s", zone);
+      putenv(newTZ);
       tzset();
       strftime(str, sizeof(str), format, localtime(&t));
+#ifdef HAVE_UNSETENV
       if(oldTZ) {
-         setenv("TZ", saveTZ, 1);
+         putenv(saveTZ);
       } else {
          unsetenv("TZ");
       }
+#else
+      putenv(saveTZ);
+#endif
    } else {
       strftime(str, sizeof(str), format, localtime(&t));
    }

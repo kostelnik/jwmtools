@@ -22,7 +22,7 @@
 
 char **desktopNames = NULL;
 
-static int showingDesktop;
+int showingDesktop;
 
 /** Initialize desktop data. */
 void InitializeDesktops() {
@@ -71,8 +71,11 @@ void DestroyDesktops() {
 
 /** Change to the desktop to the right. */
 int RightDesktop() {
-   if(desktopCount > 1) {
-      ChangeDesktop((currentDesktop + 1) % desktopCount);
+   int x, y;
+   if(desktopWidth > 1) {
+      y = currentDesktop / desktopWidth;
+      x = (currentDesktop + 1) % desktopWidth;
+      ChangeDesktop(y * desktopWidth + x);
       return 1;
    } else {
       return 0;
@@ -81,12 +84,12 @@ int RightDesktop() {
 
 /** Change to the desktop to the left. */
 int LeftDesktop() {
-   if(desktopCount > 1) {
-      if(currentDesktop > 0) {
-         ChangeDesktop(currentDesktop - 1);
-      } else {
-         ChangeDesktop(desktopCount - 1);
-      }
+   int x, y;
+   if(desktopWidth > 1) {
+      y = currentDesktop / desktopWidth;
+      x = currentDesktop % desktopWidth;
+      x = x > 0 ? x - 1 : desktopWidth - 1;
+      ChangeDesktop(y * desktopWidth + x);
       return 1;
    } else {
       return 0;
@@ -95,7 +98,7 @@ int LeftDesktop() {
 
 /** Change to the desktop above. */
 int AboveDesktop() {
-   if(desktopWidth > 1) {
+   if(desktopHeight > 1) {
       if(currentDesktop >= desktopWidth) {
          ChangeDesktop(currentDesktop - desktopWidth);
       } else {
@@ -109,7 +112,7 @@ int AboveDesktop() {
 
 /** Change to the desktop below. */
 int BelowDesktop() {
-   if(desktopWidth > 1) {
+   if(desktopHeight > 1) {
       ChangeDesktop((currentDesktop + desktopWidth) % desktopCount);
       return 1;
    } else {
@@ -123,7 +126,7 @@ void ChangeDesktop(unsigned int desktop) {
    ClientNode *np;
    unsigned int x;
 
-   if(desktop >= desktopCount) {
+   if(JUNLIKELY(desktop >= desktopCount)) {
       return;
    }
 
@@ -161,7 +164,6 @@ void ChangeDesktop(unsigned int desktop) {
    currentDesktop = desktop;
 
    SetCardinalAtom(rootWindow, ATOM_NET_CURRENT_DESKTOP, currentDesktop);
-   SetCardinalAtom(rootWindow, ATOM_WIN_WORKSPACE, currentDesktop);
 
    RestackClients();
 
@@ -242,6 +244,7 @@ void ShowDesktop() {
    }
 
    showingDesktop = !showingDesktop;
+   SetCardinalAtom(rootWindow, ATOM_NET_SHOWING_DESKTOP, showingDesktop);
 
    RestackClients();
 
@@ -262,8 +265,8 @@ void SetDesktopCount(const char *width, const char *height) {
    }
 
    desktopCount = desktopWidth * desktopHeight;
-   if(desktopCount == 0) {
-      Warning("invalid desktop count");
+   if(JUNLIKELY(desktopCount == 0)) {
+      Warning(_("invalid desktop count"));
       desktopWidth = DEFAULT_DESKTOP_WIDTH;
       desktopHeight = DEFAULT_DESKTOP_HEIGHT;
       desktopCount = desktopWidth * desktopHeight;
@@ -276,8 +279,8 @@ void SetDesktopName(unsigned int desktop, const char *str) {
 
    unsigned int x;
 
-   if(!str) {
-      Warning("empty Desktops Name tag");
+   if(JUNLIKELY(!str)) {
+      Warning(_("empty Desktops Name tag"));
       return;
    }
 

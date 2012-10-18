@@ -34,6 +34,9 @@
 #  ifdef HAVE_LOCALE_H
 #     include <locale.h>
 #  endif
+#  ifdef HAVE_LIBINTL_H
+#     include <libintl.h>
+#  endif
 #  ifdef HAVE_STDARG_H
 #     include <stdarg.h>
 #  endif
@@ -102,6 +105,14 @@
 
 #endif /* MAKE_DEPEND */
 
+#ifndef _
+#  ifdef HAVE_GETTEXT
+#     define _ gettext
+#  else
+#     define _
+#  endif
+#endif
+
 #define DEFAULT_DESKTOP_WIDTH 4
 #define DEFAULT_DESKTOP_HEIGHT 1
 
@@ -131,6 +142,9 @@
 #define MIN_TRAY_BORDER 0
 #define DEFAULT_TRAY_BORDER 1
 
+#define MAX_WINDOW_WIDTH (1 << 15)
+#define MAX_WINDOW_HEIGHT (1 << 15)
+
 #define MOVE_DELTA 3
 
 #define RESTART_DELAY 50000
@@ -142,6 +156,21 @@
 /** Fixed radius of 4x4 */
 #ifdef USE_SHAPE
 #  define CORNER_RADIUS 4
+#endif
+
+#ifdef __GNUC__
+#  if __GNUC__ >= 3
+#     define JLIKELY(x)   __builtin_expect(!!(x), 1)
+#     define JUNLIKELY(x) __builtin_expect(!!(x), 0)
+#  else
+#     warning "JLIKELY/JUNLIKELY not available with this version of gcc"
+#     define JLIKELY(x) (x)
+#     define JUNLIKELY(x) (x)
+#  endif
+#else
+#  warning "JLIKELY/JUNLIKELY not available with this compiler"
+#  define JLIKELY(x) (x)
+#  define JUNLIKELY(x) (x)
 #endif
 
 #include "debug.h"

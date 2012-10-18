@@ -49,7 +49,6 @@ typedef struct TrayButtonType {
 
 static TrayButtonType *buttons;
 
-static void CheckedCreate(TrayComponentType *cp);
 static void Create(TrayComponentType *cp);
 static void Destroy(TrayComponentType *cp);
 static void SetSize(TrayComponentType *cp, int width, int height);
@@ -57,11 +56,11 @@ static void Resize(TrayComponentType *cp);
 static void Draw(TrayComponentType *cp, int active);
 
 static void ProcessButtonPress(TrayComponentType *cp,
-   int x, int y, int mask);
+                               int x, int y, int mask);
 static void ProcessButtonRelease(TrayComponentType *cp,
-   int x, int y, int mask);
+                                 int x, int y, int mask);
 static void ProcessMotionEvent(TrayComponentType *cp,
-   int x, int y, int mask);
+                               int x, int y, int mask);
 
 /** Initialize tray button data. */
 void InitializeTrayButtons() {
@@ -85,11 +84,11 @@ void StartupTrayButtons() {
       }
       if(bp->iconName) {
          bp->icon = LoadNamedIcon(bp->iconName);
-         if(bp->icon) {
+         if(JLIKELY(bp->icon)) {
             bp->cp->requestedWidth += bp->icon->image->width;
             bp->cp->requestedHeight += bp->icon->image->height;
          } else {
-            Warning("could not load tray icon: \"%s\"", bp->iconName);
+            Warning(_("could not load tray icon: \"%s\""), bp->iconName);
          }
       }
       bp->cp->requestedWidth += 2 * BUTTON_SIZE;
@@ -136,18 +135,18 @@ TrayComponentType *CreateTrayButton(const char *iconName,
    TrayButtonType *bp;
    TrayComponentType *cp;
 
-   if((label == NULL || strlen(label) == 0)
-      && (iconName == NULL || strlen(iconName) == 0)) {
-      Warning("no icon or label for TrayButton");
+   if(JUNLIKELY((label == NULL || strlen(label) == 0)
+      && (iconName == NULL || strlen(iconName) == 0))) {
+      Warning(_("no icon or label for TrayButton"));
       return NULL;
    }
 
-   if(width < 0) {
-      Warning("invalid TrayButton width: %d", width);
+   if(JUNLIKELY(width < 0)) {
+      Warning(_("invalid TrayButton width: %d"), width);
       width = 0;
    }
-   if(height < 0) {
-      Warning("invalid TrayButton height: %d", height);
+   if(JUNLIKELY(height < 0)) {
+      Warning(_("invalid TrayButton height: %d"), height);
       height = 0;
    }
 
@@ -167,10 +166,10 @@ TrayComponentType *CreateTrayButton(const char *iconName,
    cp->requestedWidth = width;
    cp->requestedHeight = height;
 
-   bp->mousex = 0;
-   bp->mousey = 0;
+   bp->mousex = -POPUP_DELTA;
+   bp->mousey = -POPUP_DELTA;
 
-   cp->Create = CheckedCreate;
+   cp->Create = Create;
    cp->Destroy = Destroy;
    cp->SetSize = SetSize;
    cp->Resize = Resize;
@@ -191,7 +190,7 @@ void SetSize(TrayComponentType *cp, int width, int height) {
    TrayButtonType *bp;
    int labelWidth, labelHeight;
    int iconWidth, iconHeight;
-   double ratio;
+   int ratio;
 
    bp = (TrayButtonType*)cp->object;
 
@@ -207,20 +206,22 @@ void SetSize(TrayComponentType *cp, int width, int height) {
 
       iconWidth = bp->icon->image->width;
       iconHeight = bp->icon->image->height;
-      ratio = (double)iconWidth / iconHeight;
+
+      /* Fixed point with 16 bit fraction. */
+      ratio = (iconWidth << 16) / iconHeight;
 
       if(width > 0) {
 
          /* Compute height from width. */
          iconWidth = width - labelWidth - 2 * BUTTON_SIZE;
-         iconHeight = iconWidth / ratio;
+         iconHeight = (iconWidth << 16) / ratio;
          height = Max(iconHeight, labelHeight) + 2 * BUTTON_SIZE;
 
       } else if(height > 0) {
 
          /* Compute width from height. */
          iconHeight = height - 2 * BUTTON_SIZE;
-         iconWidth = iconHeight * ratio;
+         iconWidth = (iconHeight * ratio) >> 16;
          width = iconWidth + labelWidth + 2 * BUTTON_SIZE;
 
       }
@@ -232,8 +233,8 @@ void SetSize(TrayComponentType *cp, int width, int height) {
 
 }
 
-/** Initialize a button tray component (display errors). */
-void CheckedCreate(TrayComponentType *cp) {
+/** Initialize a button tray component. */
+void Create(TrayComponentType *cp) {
 
    TrayButtonType *bp;
 
@@ -250,7 +251,7 @@ void CheckedCreate(TrayComponentType *cp) {
       } else if(!strcmp(bp->action, "showdesktop")) {
          /* Valid. */
       } else {
-         Warning("invalid TrayButton action: \"%s\"", bp->action);
+         Warning(_("invalid TrayButton action: \"%s\""), bp->action);
       }
    } else {
       /* Valid. However, root menu 1 may not exist.
@@ -258,15 +259,8 @@ void CheckedCreate(TrayComponentType *cp) {
        */
    }
 
-   Create(cp);
-
-}
-
-/** Initialize a button tray component. */
-void Create(TrayComponentType *cp) {
-
    cp->pixmap = JXCreatePixmap(display, rootWindow,
-      cp->width, cp->height, rootDepth);
+                               cp->width, cp->height, rootDepth);
 
    Draw(cp, 0);
 
@@ -467,8 +461,8 @@ void ValidateTrayButtons() {
    for(bp = buttons; bp; bp = bp->next) {
       if(bp->action && !strncmp(bp->action, "root:", 5)) {
          bindex = atoi(bp->action + 5);
-         if(!IsRootMenuDefined(bindex)) {
-            Warning("tray button: root menu %d not defined", bindex);
+         if(JUNLIKELY(!IsRootMenuDefined(bindex))) {
+            Warning(_("tray button: root menu %d not defined"), bindex);
          }
       }
    }

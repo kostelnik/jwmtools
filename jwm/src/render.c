@@ -24,9 +24,12 @@ int PutScaledRenderIcon(IconNode *icon, ScaledIconNode *node, Drawable d,
 
    Picture dest;
    Picture source;
+   Picture alpha;
    XRenderPictFormat *fp;
    XRenderPictureAttributes pa;
+   XTransform xf;
    int width, height;
+   int xscale, yscale;
 
    Assert(icon);
 
@@ -35,6 +38,7 @@ int PutScaledRenderIcon(IconNode *icon, ScaledIconNode *node, Drawable d,
    }
 
    source = node->imagePicture;
+   alpha = node->alphaPicture;
    if(source != None) {
 
       fp = JXRenderFindVisualFormat(display, rootVisual);
@@ -45,16 +49,29 @@ int PutScaledRenderIcon(IconNode *icon, ScaledIconNode *node, Drawable d,
 
       if(node->width == 0) {
          width = icon->image->width;
+         xscale = 65536;
       } else {
          width = node->width;
+         xscale = (icon->image->width << 16) / width;
       }
       if(node->height == 0) {
          height = icon->image->height;
+         yscale = 65536;
       } else {
          height = node->height;
+         yscale = (icon->image->height << 16) / height;
       }
 
-      JXRenderComposite(display, PictOpOver, source, node->maskPicture, dest,
+      memset(&xf, 0, sizeof(xf));
+      xf.matrix[0][0] = xscale;
+      xf.matrix[1][1] = yscale;
+      xf.matrix[2][2] = 65536;
+      XRenderSetPictureTransform(display, source, &xf);
+      XRenderSetPictureFilter(display, source, FilterBest, NULL, 0);
+      XRenderSetPictureTransform(display, alpha, &xf);
+      XRenderSetPictureFilter(display, alpha, FilterBest, NULL, 0);
+
+      JXRenderComposite(display, PictOpOver, source, alpha, dest,
                         0, 0, 0, 0, x, y, width, height);
 
       JXRenderFreePicture(display, dest);
@@ -79,7 +96,6 @@ ScaledIconNode *CreateScaledRenderIcon(IconNode *icon,
 
 #ifdef USE_XRENDER
 
-   XRenderPictureAttributes picAttributes;
    XRenderPictFormat *fp;
    XColor color;
    GC maskGC;
@@ -88,8 +104,6 @@ ScaledIconNode *CreateScaledRenderIcon(IconNode *icon,
    unsigned long alpha;
    int index, yindex;
    int x, y;
-   double scalex, scaley;
-   double srcx, srcy;
    int imageLine;
    int maskLine;
 
@@ -103,17 +117,10 @@ ScaledIconNode *CreateScaledRenderIcon(IconNode *icon,
    result->next = icon->nodes;
    icon->nodes = result;
 
-   if(width == 0) {
-      width = icon->image->width;
-   }
-   if(height == 0) {
-      height = icon->image->height;
-   }
    result->width = width;
    result->height = height;
-
-   scalex = (double)icon->image->width / width;
-   scaley = (double)icon->image->height / height;
+   width = icon->image->width;
+   height = icon->image->height;
 
    result->mask = JXCreatePixmap(display, rootWindow, width, height, 8);
    maskGC = JXCreateGC(display, result->mask, 0, NULL);
@@ -130,13 +137,11 @@ ScaledIconNode *CreateScaledRenderIcon(IconNode *icon,
 
    imageLine = 0;
    maskLine = 0;
-   srcy = 0.0;
    for(y = 0; y < height; y++) {
-      srcx = 0.0;
-      yindex = (int)srcy * icon->image->width;
+      yindex = y * icon->image->width;
       for(x = 0; x < width; x++) {
 
-         index = 4 * (yindex + (int)srcx);
+         index = 4 * (yindex + x);
          alpha = icon->image->data[index];
          color.red = icon->image->data[index + 1];
          color.red |= color.red << 8;
@@ -145,14 +150,15 @@ ScaledIconNode *CreateScaledRenderIcon(IconNode *icon,
          color.blue = icon->image->data[index + 3];
          color.blue |= color.blue << 8;
 
+         color.red = (color.red * alpha) >> 8;
+         color.green = (color.green * alpha) >> 8;
+         color.blue = (color.blue * alpha) >> 8;
+
          GetColor(&color);
          XPutPixel(destImage, x, y, color.pixel);
          destMask->data[maskLine + x] = alpha;
 
-         srcx += scalex;
-
       }
-      srcy += scaley;
       imageLine += destImage->bytes_per_line;
       maskLine += destMask->bytes_per_line;
    }
@@ -175,15 +181,14 @@ ScaledIconNode *CreateScaledRenderIcon(IconNode *icon,
    /* Create the alpha picture. */
    fp = JXRenderFindStandardFormat(display, PictStandardA8);
    Assert(fp);
-   result->maskPicture = JXRenderCreatePicture(display, result->mask, fp, 
-                                               0, NULL);
+   result->alphaPicture = JXRenderCreatePicture(display, result->mask, fp,
+                                                0, NULL);
    
    /* Create the render picture. */
    fp = JXRenderFindVisualFormat(display, rootVisual);
    Assert(fp);
-   picAttributes.alpha_map = result->maskPicture;
    result->imagePicture = JXRenderCreatePicture(display, result->image, fp,
-                                                CPAlphaMap, &picAttributes);
+                                                0, NULL);
 
    /* Free unneeded pixmaps. */
    JXFreePixmap(display, result->image);

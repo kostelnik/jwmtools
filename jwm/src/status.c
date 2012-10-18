@@ -32,22 +32,22 @@ static StatusWindowType moveStatusType;
 static StatusWindowType resizeStatusType;
 
 static void CreateMoveResizeWindow(const ClientNode *np,
-   StatusWindowType type);
+                                   StatusWindowType type);
 static void DrawMoveResizeWindow(const ClientNode *np, StatusWindowType type);
 static void DestroyMoveResizeWindow();
 static void GetMoveResizeCoordinates(const ClientNode *np,
-   StatusWindowType type, int *x, int *y);
+                                     StatusWindowType type, int *x, int *y);
 static StatusWindowType ParseType(const char *str);
 
 /** Get the location to place the status window. */
 void GetMoveResizeCoordinates(const ClientNode *np, StatusWindowType type,
-   int *x, int *y) {
+                              int *x, int *y) {
 
    const ScreenType *sp;
 
    if(type == SW_WINDOW) {
-      *x = np->x + np->width / 2 - statusWindowWidth / 2;
-      *y = np->y + np->height / 2 - statusWindowHeight / 2;
+      *x = np->x + (np->width - statusWindowWidth) / 2;
+      *y = np->y + (np->height - statusWindowHeight) / 2;
       return;
    }
 
@@ -60,9 +60,8 @@ void GetMoveResizeCoordinates(const ClientNode *np, StatusWindowType type,
    }
 
    /* SW_SCREEN */
-
-   *x = sp->x + sp->width / 2 - statusWindowWidth / 2;
-   *y = sp->y + sp->height / 2 - statusWindowHeight / 2;
+   *x = sp->x + (sp->width - statusWindowWidth) / 2;
+   *y = sp->y + (sp->height - statusWindowHeight) / 2;
 
 }
 
@@ -112,20 +111,17 @@ void DrawMoveResizeWindow(const ClientNode *np, StatusWindowType type) {
    ShapeRoundedRectWindow(statusWindow, statusWindowWidth, statusWindowHeight);
 
    /* Clear the background. */
-   JXSetForeground(display, rootGC, colors[COLOR_MENU_BG]);
-   JXFillRectangle(display, statusWindow, rootGC, 0, 0,
-      statusWindowWidth, statusWindowHeight);
+   JXClearWindow(display, statusWindow);
 
    /* Draw a border. */
    JXSetForeground(display, rootGC, colors[COLOR_MENU_FG]);
-
-#ifdef USE_XMU
-   XmuDrawRoundedRectangle(display, statusWindow, rootGC, 0, 0,
-      (int)statusWindowWidth - 1, (int)statusWindowHeight - 1,
-      CORNER_RADIUS, CORNER_RADIUS);
+#ifdef USE_SHAPE
+   DrawRoundedRectangle(statusWindow, rootGC, 0, 0,
+                        statusWindowWidth - 1, statusWindowHeight - 1,
+                        CORNER_RADIUS);
 #else
    JXDrawRectangle(display, statusWindow, rootGC, 0, 0,
-      statusWindowWidth - 1, statusWindowHeight - 1);
+                   statusWindowWidth - 1, statusWindowHeight - 1);
 #endif
 
 }
@@ -162,7 +158,7 @@ void UpdateMoveWindow(ClientNode *np) {
    snprintf(str, sizeof(str), "(%d, %d)", np->x, np->y);
    width = GetStringWidth(FONT_MENU, str);
    RenderString(statusWindow, FONT_MENU, COLOR_MENU_FG,
-      statusWindowWidth / 2 - width / 2, 4, rootWidth, NULL, str);
+                (statusWindowWidth - width) / 2, 4, rootWidth, NULL, str);
 
 }
 
@@ -195,7 +191,7 @@ void UpdateResizeWindow(ClientNode *np, int gwidth, int gheight) {
    snprintf(str, sizeof(str), "%d x %d", gwidth, gheight);
    fontWidth = GetStringWidth(FONT_MENU, str);
    RenderString(statusWindow, FONT_MENU, COLOR_MENU_FG,
-      statusWindowWidth / 2 - fontWidth / 2, 4, rootWidth, NULL, str);
+                (statusWindowWidth - fontWidth) / 2, 4, rootWidth, NULL, str);
 
 }
 
@@ -231,9 +227,9 @@ void SetMoveStatusType(const char *str) {
    StatusWindowType type;
 
    type = ParseType(str);
-   if(type == SW_INVALID) {
+   if(JUNLIKELY(type == SW_INVALID)) {
       moveStatusType = SW_SCREEN;
-      Warning("invalid MoveMode coordinates: \"%s\"", str);
+      Warning(_("invalid MoveMode coordinates: \"%s\""), str);
    } else {
       moveStatusType = type;
    }
@@ -246,9 +242,9 @@ void SetResizeStatusType(const char *str) {
    StatusWindowType type;
 
    type = ParseType(str);
-   if(type == SW_INVALID) {
+   if(JUNLIKELY(type == SW_INVALID)) {
       resizeStatusType = SW_SCREEN;
-      Warning("invalid ResizeMode coordinates: \"%s\"", str);
+      Warning(_("invalid ResizeMode coordinates: \"%s\""), str);
    } else {
       resizeStatusType = type;
    }

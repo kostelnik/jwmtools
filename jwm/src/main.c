@@ -52,10 +52,11 @@ Visual *rootVisual;
 GC rootGC;
 int colormapCount;
 
-int shouldExit = 0;
-int shouldRestart = 0;
-int isRestarting = 0;
-int initializing = 0;
+char shouldExit = 0;
+char shouldRestart = 0;
+char isRestarting = 0;
+char initializing = 0;
+char shouldReload = 0;
 
 unsigned int desktopWidth = 4;
 unsigned int desktopHeight = 1;
@@ -95,13 +96,16 @@ static void CloseConnection();
 static void StartupConnection();
 static void ShutdownConnection();
 static void EventLoop();
-static void HandleExit();
+static void HandleExit(int sig);
 static void DoExit(int code);
 static void SendRestart();
 static void SendExit();
+static void SendReload();
+static void SendJWMMessage(const char *message);
 
-static char *configPath = NULL;
 static char *displayString = NULL;
+
+char *configPath = NULL;
 
 /** The main entry point. */
 int main(int argc, char *argv[]) {
@@ -139,6 +143,9 @@ int main(int argc, char *argv[]) {
       } else if(!strcmp(argv[x], "-exit")) {
          SendExit();
          DoExit(0);
+		} else if(!strcmp(argv[x], "-reload")) {
+			SendReload();
+			DoExit(0);
       } else if(!strcmp(argv[x], "-display") && x + 1 < argc) {
          displayString = argv[++x];
       } else {
@@ -147,8 +154,12 @@ int main(int argc, char *argv[]) {
       }
    }
 
-#ifdef HAVE_LOCALE_H
+#ifdef HAVE_SETLOCALE
    setlocale(LC_ALL, "");
+#endif
+#ifdef HAVE_GETTEXT
+   bindtextdomain("jwm", LOCALEDIR);
+   textdomain("jwm");
 #endif
 
    /* The main loop. */
@@ -158,6 +169,7 @@ int main(int argc, char *argv[]) {
       isRestarting = shouldRestart;
       shouldExit = 0;
       shouldRestart = 0;
+		shouldReload = 0;
 
       /* Prepare JWM components. */
       Initialize();
@@ -183,7 +195,7 @@ int main(int argc, char *argv[]) {
    /* If we have a command to execute on shutdown, run it now. */
    if(exitCommand) {
       execl(SHELL_NAME, SHELL_NAME, "-c", exitCommand, NULL);
-      Warning("exec failed: (%s) %s", SHELL_NAME, exitCommand);
+      Warning(_("exec failed: (%s) %s"), SHELL_NAME, exitCommand);
       DoExit(1);
    } else {
       DoExit(0);
@@ -218,7 +230,7 @@ void EventLoop() {
    XEvent event;
 
    /* Loop processing events until it's time to exit. */
-   while(!shouldExit) {
+   while(JLIKELY(!shouldExit)) {
       WaitForEvent(&event);
       ProcessEvent(&event);
    }
@@ -238,7 +250,7 @@ void EventLoop() {
 void OpenConnection() {
 
    display = JXOpenDisplay(displayString);
-   if(!display) {
+   if(JUNLIKELY(!display)) {
       if(displayString) {
          printf("error: could not open display %s\n", displayString);
       } else {
@@ -259,6 +271,7 @@ void OpenConnection() {
 
    XSetGraphicsExposures(display, rootGC, False);
 
+
 }
 
 /** Prepare the connection. */
@@ -272,6 +285,7 @@ void StartupConnection() {
    int renderEvent;
    int renderError;
 #endif
+   struct sigaction sa;
 
    initializing = 1;
    OpenConnection();
@@ -292,6 +306,7 @@ void StartupConnection() {
    attr.event_mask
       = SubstructureRedirectMask
       | SubstructureNotifyMask
+      | StructureNotifyMask
       | PropertyChangeMask
       | ColormapChangeMask
       | ButtonPressMask
@@ -299,9 +314,16 @@ void StartupConnection() {
       | PointerMotionMask | PointerMotionHintMask;
    JXChangeWindowAttributes(display, rootWindow, CWEventMask, &attr);
 
-   signal(SIGTERM, HandleExit);
-   signal(SIGINT, HandleExit);
-   signal(SIGHUP, HandleExit);
+   memset(&sa, 0, sizeof(sa));
+   sa.sa_flags = 0;
+   sa.sa_handler = HandleExit;
+   sigaction(SIGTERM, &sa, NULL);
+   sigaction(SIGINT, &sa, NULL);
+   sigaction(SIGHUP, &sa, NULL);
+
+   sa.sa_flags = SA_NOCLDWAIT;
+   sa.sa_handler = SIG_DFL;
+   sigaction(SIGCHLD, &sa, NULL);
 
 #ifdef USE_SHAPE
    haveShape = JXShapeQueryExtension(display, &shapeEvent, &shapeError);
@@ -337,10 +359,7 @@ void ShutdownConnection() {
 }
 
 /** Signal handler. */
-void HandleExit() {
-   signal(SIGTERM, HandleExit);
-   signal(SIGINT, HandleExit);
-   signal(SIGHUP, HandleExit);
+void HandleExit(int sig) {
    shouldExit = 1;
 }
 
@@ -348,6 +367,7 @@ void HandleExit() {
  * This is called before the X connection is opened.
  */
 void Initialize() {
+
    InitializeBackgrounds();
    InitializeBorders();
    InitializeClients();
@@ -518,25 +538,21 @@ void Destroy() {
 
 /** Send _JWM_RESTART to the root window. */
 void SendRestart() {
-
-   XEvent event;
-
-   OpenConnection();
-
-   memset(&event, 0, sizeof(event));
-   event.xclient.type = ClientMessage;
-   event.xclient.window = rootWindow;
-   event.xclient.message_type = JXInternAtom(display, "_JWM_RESTART", False);
-   event.xclient.format = 32;
-
-   JXSendEvent(display, rootWindow, False, SubstructureRedirectMask, &event);
-
-   CloseConnection();
-
+	SendJWMMessage("_JWM_RESTART");
 }
 
 /** Send _JWM_EXIT to the root window. */
 void SendExit() {
+	SendJWMMessage("_JWM_EXIT");
+}
+
+/** Send _JWM_RELOAD to the root window. */
+void SendReload() {
+	SendJWMMessage("_JWM_RELOAD");
+}
+
+/** Send a JWM message to the root window. */
+void SendJWMMessage(const char *message) {
 
    XEvent event;
 
@@ -545,11 +561,12 @@ void SendExit() {
    memset(&event, 0, sizeof(event));
    event.xclient.type = ClientMessage;
    event.xclient.window = rootWindow;
-   event.xclient.message_type = JXInternAtom(display, "_JWM_EXIT", False);
+   event.xclient.message_type = JXInternAtom(display, message, False);
    event.xclient.format = 32;
 
    JXSendEvent(display, rootWindow, False, SubstructureRedirectMask, &event);
 
    CloseConnection();
+
 }
 

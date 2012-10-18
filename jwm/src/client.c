@@ -24,20 +24,19 @@
 #include "color.h"
 #include "error.h"
 #include "place.h"
-
-static const int STACK_BLOCK_SIZE = 8;
+#include "event.h"
 
 static ClientNode *activeClient;
 
 static int clientCount;
 
 static void LoadFocus();
-static void ReparentClient(ClientNode *np, int notOwner);
+static void ReparentClient(ClientNode *np, char notOwner);
  
 static void MinimizeTransients(ClientNode *np);
 static void CheckShape(ClientNode *np);
 
-static void RestoreTransients(ClientNode *np, int raise);
+static void RestoreTransients(ClientNode *np, char raise);
 
 static void KillClientHandler(ClientNode *np);
 
@@ -74,7 +73,7 @@ void StartupClients() {
 
    /* Query client windows. */
    JXQueryTree(display, rootWindow, &rootReturn, &parentReturn,
-      &childrenReturn, &childrenCount);
+               &childrenReturn, &childrenCount);
 
    /* Add each client. */
    for(x = 0; x < childrenCount; x++) {
@@ -122,7 +121,7 @@ void LoadFocus() {
    unsigned int mask;
 
    JXQueryPointer(display, rootWindow, &rootReturn, &childReturn,
-      &rootx, &rooty, &winx, &winy, &mask);
+                  &rootx, &rooty, &winx, &winy, &mask);
 
    np = FindClientByWindow(childReturn);
    if(np) {
@@ -132,7 +131,7 @@ void LoadFocus() {
 }
 
 /** Add a window to management. */
-ClientNode *AddClientWindow(Window w, int alreadyMapped, int notOwner) {
+ClientNode *AddClientWindow(Window w, char alreadyMapped, char notOwner) {
 
    XWindowAttributes attr;
    ClientNode *np;
@@ -382,7 +381,7 @@ void UnshadeClient(ClientNode *np) {
       np->width + west + east, np->height + north + south);
 
    JXResizeWindow(display, np->parent,
-      np->width + west + east, np->height + north + south);
+                  np->width + west + east, np->height + north + south);
 
    WriteState(np);
 
@@ -427,7 +426,7 @@ void SetClientWithdrawn(ClientNode *np) {
 }
 
 /** Restore a window with its transients (helper method). */
-void RestoreTransients(ClientNode *np, int raise) {
+void RestoreTransients(ClientNode *np, char raise) {
 
    ClientNode *tp;
    int x;
@@ -467,7 +466,7 @@ void RestoreTransients(ClientNode *np, int raise) {
 }
 
 /** Restore a client window and its transients. */
-void RestoreClient(ClientNode *np, int raise) {
+void RestoreClient(ClientNode *np, char raise) {
 
    Assert(np);
 
@@ -487,8 +486,8 @@ void SetClientLayer(ClientNode *np, unsigned int layer) {
 
    Assert(np);
 
-   if(layer > LAYER_TOP) {
-      Warning("Client %s requested an invalid layer: %d", np->name, layer);
+   if(JUNLIKELY(layer > LAYER_TOP)) {
+      Warning(_("Client %s requested an invalid layer: %d"), np->name, layer);
       return;
    }
 
@@ -526,7 +525,6 @@ void SetClientLayer(ClientNode *np, unsigned int layer) {
 
                /* Set the new layer */
                tp->state.layer = layer;
-               SetCardinalAtom(tp->window, ATOM_WIN_LAYER, layer);
 
                /* Make sure we continue on the correct layer list. */
                tp = next;
@@ -544,11 +542,11 @@ void SetClientLayer(ClientNode *np, unsigned int layer) {
 }
 
 /** Set a client's sticky status. This will update transients. */
-void SetClientSticky(ClientNode *np, int isSticky) {
+void SetClientSticky(ClientNode *np, char isSticky) {
 
    ClientNode *tp;
-   int old;
    int x;
+   char old;
 
    Assert(np);
 
@@ -604,7 +602,7 @@ void SetClientDesktop(ClientNode *np, unsigned int desktop) {
 
    Assert(np);
 
-   if(desktop >= desktopWidth * desktopHeight) {
+   if(JUNLIKELY(desktop >= desktopWidth * desktopHeight)) {
       return;
    }
 
@@ -665,7 +663,7 @@ void ShowClient(ClientNode *np) {
 }
 
 /** Maximize a client window. */
-void MaximizeClient(ClientNode *np, int horiz, int vert) {
+void MaximizeClient(ClientNode *np, char horiz, char vert) {
 
    int north, south, east, west;
 
@@ -725,18 +723,17 @@ void MaximizeClientDefault(ClientNode *np) {
 }
 
 /** Set a client's full screen state. */
-void SetClientFullScreen(ClientNode *np, int fullScreen) {
+void SetClientFullScreen(ClientNode *np, char fullScreen) {
 
    XEvent event;
    int north, south, east, west;
+   BoundingBox box;
    const ScreenType *sp;
 
    Assert(np);
 
    /* Make sure there's something to do. */
-   if(fullScreen && (np->state.status & STAT_FULLSCREEN)) {
-      return;
-   } else if (!fullScreen && !(np->state.status & STAT_FULLSCREEN)) {
+   if(!fullScreen == !(np->state.status & STAT_FULLSCREEN)) {
       return;
    }
 
@@ -749,29 +746,59 @@ void SetClientFullScreen(ClientNode *np, int fullScreen) {
    if(fullScreen) {
 
       np->state.status |= STAT_FULLSCREEN;
+      np->state.border &= ~BORDER_MOVE;
+      SetClientLayer(np, LAYER_TOP);
+
+      np->oldx = np->x;
+      np->oldy = np->y;
+      np->oldWidth = np->width;
+      np->oldHeight = np->height;
 
       sp = GetCurrentScreen(np->x, np->y);
+      GetScreenBounds(sp, &box);
 
-      JXReparentWindow(display, np->window, rootWindow, 0, 0);
-      JXMoveResizeWindow(display, np->window, 0, 0, sp->width, sp->height);
-      SetClientLayer(np, LAYER_TOP);
+      GetBorderSize(np, &north, &south, &east, &west);
+      box.x += west;
+      box.y += north;
+      box.width -= east + west;
+      box.height -= north + south;
+
+      np->x = box.x;
+      np->y = box.y;
+      np->width = box.width;
+      np->height = box.height;
+
+      ShapeRoundedRectWindow(np->parent,
+                             np->width + east + west,
+                             np->height + north + south);
+      JXMoveResizeWindow(display, np->parent,
+                         np->x - west, np->y - north,
+                         np->width + east + west,
+                         np->height + north + south);
+      JXMoveResizeWindow(display, np->window, west, north,
+                         np->width, np->height);
 
    } else {
 
       np->state.status &= ~STAT_FULLSCREEN;
+      np->state.border |= BORDER_MOVE;
+      np->x = np->oldx;
+      np->y = np->oldy;
+      np->width = np->oldWidth;   
+      np->height = np->oldHeight;
 
-      /* Reparent window */
       GetBorderSize(np, &north, &south, &east, &west);
-      JXReparentWindow(display, np->window, np->parent, west, north);
-      JXMoveResizeWindow(display, np->window, west,
-         north, np->width, np->height);
+      ShapeRoundedRectWindow(np->parent,
+                              np->width + east + west,
+                             np->height + north + south);
 
-      /* Restore parent position */
-      GetBorderSize(np, &north, &south, &east, &west);
-      ShapeRoundedRectWindow(np->parent, np->width + east + west,
-         np->height + north + south);
-      JXMoveResizeWindow(display, np->parent, np->oldx - west,
-         np->oldy - north, np->width + east + west, np->height + north + south);
+      JXMoveResizeWindow(display, np->parent,
+                         np->x - west,
+                         np->y - north,
+                         np->width + east + west,
+                         np->height + north + south);
+      JXMoveResizeWindow(display, np->window,
+                         west, north, np->width, np->height);
 
       event.type = MapRequest;
       event.xmaprequest.send_event = True;
@@ -793,6 +820,8 @@ void SetClientFullScreen(ClientNode *np, int fullScreen) {
 /** Set the active client. */
 void FocusClient(ClientNode *np) {
 
+   ClientProtocolType protocols;
+
    Assert(np);
 
    if(np->state.status & STAT_HIDDEN) {
@@ -808,11 +837,6 @@ void FocusClient(ClientNode *np) {
       np->state.status |= STAT_ACTIVE;
       activeClient = np;
 
-      if(!(np->state.status & STAT_SHADED)) {
-         UpdateClientColormap(np);
-         SetWindowAtom(rootWindow, ATOM_NET_ACTIVE_WINDOW, np->window);
-      }
-
       DrawBorder(np, NULL);
       UpdatePager();
       UpdateTaskBar();
@@ -820,9 +844,15 @@ void FocusClient(ClientNode *np) {
    }
 
    if(np->state.status & STAT_MAPPED) {
-      JXSetInputFocus(display, np->window, RevertToPointerRoot, CurrentTime);
+      UpdateClientColormap(np);
+      SetWindowAtom(rootWindow, ATOM_NET_ACTIVE_WINDOW, np->window);
+      protocols = ReadWMProtocols(np->window);
+      JXSetInputFocus(display, np->window, RevertToPointerRoot, eventTime);
+      if(protocols & PROT_TAKE_FOCUS) {
+         SendClientMessage(np->window, ATOM_WM_PROTOCOLS, ATOM_WM_TAKE_FOCUS);
+      }
    } else {
-      JXSetInputFocus(display, rootWindow, RevertToPointerRoot, CurrentTime);
+      JXSetInputFocus(display, rootWindow, RevertToPointerRoot, eventTime);
    }
 
 }
@@ -881,8 +911,8 @@ void KillClient(ClientNode *np) {
    Assert(np);
 
    ShowConfirmDialog(np, KillClientHandler,
-      "Kill this window?",
-      "This may cause data to be lost!",
+      _("Kill this window?"),
+      _("This may cause data to be lost!"),
       NULL);
 }
 
@@ -989,7 +1019,7 @@ void RestackClients() {
    unsigned int temp;
    int isFirst;
 
-   /** Allocate memory for restacking. */
+   /* Allocate memory for restacking. */
    trayCount = GetTrayCount();
    stack = AllocateStack((clientCount + trayCount) * sizeof(Window));
 
@@ -1059,10 +1089,10 @@ void SendClientMessage(Window w, AtomType type, AtomType message) {
    event.xclient.message_type = atoms[type];
    event.xclient.format = 32;
    event.xclient.data.l[0] = atoms[message];
-   event.xclient.data.l[1] = CurrentTime;
+   event.xclient.data.l[1] = eventTime;
 
    status = JXSendEvent(display, w, False, 0, &event);
-   if(status == False) {
+   if(JUNLIKELY(status == False)) {
       Debug("SendClientMessage failed");
    }
 
@@ -1165,8 +1195,14 @@ void RemoveClient(ClientNode *np) {
       FocusNextStacked(np);
    }
    if(activeClient == np) {
+
+      /* Must be the last client. */
+
       SetWindowAtom(rootWindow, ATOM_NET_ACTIVE_WINDOW, None);
       activeClient = NULL;
+
+      JXSetInputFocus(display, rootWindow, RevertToPointerRoot, eventTime);
+
    }
 
    /* If the window manager is exiting (ie, not the client), then
@@ -1259,7 +1295,7 @@ ClientNode *FindClientByParent(Window p) {
 }
 
 /** Reparent a client window. */
-void ReparentClient(ClientNode *np, int notOwner) {
+void ReparentClient(ClientNode *np, char notOwner) {
 
    XSetWindowAttributes attr;
    int attrMask;
@@ -1287,9 +1323,6 @@ void ReparentClient(ClientNode *np, int notOwner) {
    GrabKeys(np);
 
    attrMask = 0;
-
-   attrMask |= CWOverrideRedirect;
-   attr.override_redirect = True;
 
    attrMask |= CWBackPixmap;
    attr.background_pixmap = ParentRelative;
@@ -1421,8 +1454,6 @@ void UpdateClientColormap(ClientNode *np) {
 
    Assert(np);
 
-   cp = np->colormaps;
-
    if(np == activeClient) {
 
       wasInstalled = 0;
@@ -1455,8 +1486,8 @@ void SetActiveClientOpacity(const char *str) {
    Assert(str);
 
    temp = atof(str);
-   if(temp <= 0.0 || temp > 1.0) {
-      Warning("invalid active client opacity: %s", str);
+   if(JUNLIKELY(temp <= 0.0 || temp > 1.0)) {
+      Warning(_("invalid active client opacity: %s"), str);
       activeOpacity = UINT_MAX;
    } else {
       activeOpacity = (unsigned int)(1.0 * UINT_MAX);
@@ -1482,8 +1513,8 @@ void SetInactiveClientOpacity(const char *str) {
 
    /* Read the first (or only) bound of the range. */
    temp = atof(str);
-   if(temp < 0.0 || temp > 1.0) {
-      Warning("invalid inactive client opacity: %s", str);
+   if(JUNLIKELY(temp < 0.0 || temp > 1.0)) {
+      Warning(_("invalid inactive client opacity: %s"), str);
       return;
    }
    first = (unsigned int)(temp * UINT_MAX);
@@ -1495,8 +1526,8 @@ void SetInactiveClientOpacity(const char *str) {
 
       /* A range was specified. */
       temp = atof(str_u + 1);
-      if(temp < 0.0 || temp > 1.0) {
-         Warning("invalid inactive client opacity: %s", str);
+      if(JUNLIKELY(temp < 0.0 || temp > 1.0)) {
+         Warning(_("invalid inactive client opacity: %s"), str);
          return;
       }
       second = (unsigned int)(temp * UINT_MAX);
@@ -1505,8 +1536,8 @@ void SetInactiveClientOpacity(const char *str) {
       str_d = strchr(str_u + 1, ':');
       if(str_d) {
          temp = atof(str_d + 1);
-         if(temp <= 0.0 || temp > 1.0) {
-            Warning("invalid inactive client opacity delta: %s", str);
+         if(JUNLIKELY(temp <= 0.0 || temp > 1.0)) {
+            Warning(_("invalid inactive client opacity delta: %s"), str);
             return;
          }
          deltaInactiveOpacity = (unsigned int)(temp * UINT_MAX);

@@ -37,11 +37,14 @@
 
 #define MIN_TIME_DELTA 50
 
+Time eventTime = CurrentTime;
+
 static void Signal();
 static void DispatchBorderButtonEvent(const XButtonEvent *event,
-   ClientNode *np);
+                                      ClientNode *np);
 
 static void HandleConfigureRequest(const XConfigureRequestEvent *event);
+static int HandleConfigureNotify(const XConfigureEvent *event);
 static int HandleExpose(const XExposeEvent *event);
 static int HandlePropertyNotify(const XPropertyEvent *event);
 static void HandleClientMessage(const XClientMessageEvent *event);
@@ -58,9 +61,9 @@ static void HandleMotionNotify(const XMotionEvent *event);
 static int HandleSelectionClear(const XSelectionClearEvent *event);
 
 static void HandleNetMoveResize(const XClientMessageEvent *event,
-   ClientNode *np);
+                                ClientNode *np);
 static void HandleNetWMState(const XClientMessageEvent *event,
-   ClientNode *np);
+                             ClientNode *np);
 
 #ifdef USE_SHAPE
 static void HandleShapeEvent(const XShapeEvent *event);
@@ -91,6 +94,7 @@ void WaitForEvent(XEvent *event) {
       Signal();
 
       JXNextEvent(display, event);
+      UpdateTime(event);
 
       switch(event->type) {
       case ConfigureRequest:
@@ -137,7 +141,7 @@ void WaitForEvent(XEvent *event) {
          handled = 1;
          break;
       case ConfigureNotify:
-         handled = 0;
+         handled = HandleConfigureNotify(&event->xconfigure);
          break;
       case CreateNotify:
       case MapNotify:
@@ -146,16 +150,15 @@ void WaitForEvent(XEvent *event) {
          handled = 1;
          break;
       default:
+         if(0) {
 #ifdef USE_SHAPE
-         if(haveShape && event->type == shapeEvent) {
+         } else if(haveShape && event->type == shapeEvent) {
             HandleShapeEvent((XShapeEvent*)event);
             handled = 1;
+#endif
          } else {
             handled = 0;
          }
-#else
-         handled = 0;
-#endif
          break;
       }
 
@@ -224,6 +227,7 @@ void ProcessEvent(XEvent *event) {
       break;
    case MotionNotify:
       while(JXCheckTypedEvent(display, MotionNotify, event));
+      UpdateTime(event);
       HandleMotionNotify(&event->xmotion);
       break;
    case DestroyNotify:
@@ -242,6 +246,7 @@ void DiscardMotionEvents(XEvent *event, Window w) {
    XEvent temp;
 
    while(JXCheckTypedEvent(display, MotionNotify, &temp)) {
+      UpdateTime(event);
       SetMousePosition(temp.xmotion.x_root, temp.xmotion.y_root);
       if(temp.xmotion.window == w) {
          *event = temp;
@@ -266,16 +271,19 @@ void HandleButtonEvent(const XButtonEvent *event) {
 
    np = FindClientByParent(event->window);
    if(np) {
-      RaiseClient(np);
-      if(focusModel == FOCUS_CLICK) {
-         FocusClient(np);
+      if(event->type == ButtonPress) {
+         RaiseClient(np);
+         if(focusModel == FOCUS_CLICK) {
+            FocusClient(np);
+         }
       }
       switch(event->button) {
       case Button1:
          DispatchBorderButtonEvent(event, np);
          break;
       case Button2:
-         MoveClient(np, event->x, event->y);
+         MoveClient(np, event->x, event->y,
+                    (event->state & Mod1Mask) ? 0 : 1);
          break;
       case Button3:
          GetBorderSize(np, &north, &south, &east, &west);
@@ -312,14 +320,14 @@ void HandleButtonEvent(const XButtonEvent *event) {
             }
             if(event->state & Mod1Mask) {
                GetBorderSize(np, &north, &south, &east, &west);
-               MoveClient(np, event->x + west, event->y + north);
+               MoveClient(np, event->x + west, event->y + north, 0);
             }
             break;
          case Button3:
             if(event->state & Mod1Mask) {
                GetBorderSize(np, &north, &south, &east, &west);
                ResizeClient(np, BA_RESIZE | BA_RESIZE_E | BA_RESIZE_S,
-                  event->x + west, event->y + north);
+                            event->x + west, event->y + north);
             } else {
                RaiseClient(np);
                if(focusModel == FOCUS_CLICK) {
@@ -330,11 +338,11 @@ void HandleButtonEvent(const XButtonEvent *event) {
          default:
             break;
          }
-         JXAllowEvents(display, ReplayPointer, CurrentTime);
+         JXAllowEvents(display, ReplayPointer, eventTime);
       }
+
    }
 
-   UpdatePager();
 }
 
 /** Process a key press event. */
@@ -443,6 +451,15 @@ void HandleKeyPress(const XKeyEvent *event) {
    case KEY_EXIT:
       Exit();
       break;
+   case KEY_FULLSCREEN:
+      if(np) {
+         if(np->state.status & STAT_FULLSCREEN) {
+            SetClientFullScreen(np, 0);
+         } else {
+            SetClientFullScreen(np, 1);
+         }
+      }
+      break;
    default:
       break;
    }
@@ -478,31 +495,22 @@ void HandleConfigureRequest(const XConfigureRequestEvent *event) {
    np = FindClientByWindow(event->window);
    if(np && np->window == event->window) {
 
-      /* We own this window, make sure it's not trying to do something bad. */
       changed = 0;
       if((event->value_mask & CWWidth) && (event->width != np->width)) {
-         if(!(np->state.status & STAT_HMAX)) {
-            np->width = event->width;
-            changed = 1;
-         }
+         np->width = event->width;
+         changed = 1;
       }
       if((event->value_mask & CWHeight) && (event->height != np->height)) {
-         if(!(np->state.status & STAT_VMAX)) {
-            np->height = event->height;
-            changed = 1;
-         }
+         np->height = event->height;
+         changed = 1;
       }
       if((event->value_mask & CWX) && (event->x != np->x)) {
-         if(!(np->state.status & STAT_HMAX)) {
-            np->x = event->x;
-            changed = 1;
-         }
+         np->x = event->x;
+         changed = 1;
       }
       if((event->value_mask & CWY) && (event->y != np->y)) {
-         if(!(np->state.status & STAT_VMAX)) {
-            np->y = event->y;
-            changed = 1;
-         }
+         np->y = event->y;
+         changed = 1;
       }
 
       if(!changed) {
@@ -544,11 +552,29 @@ void HandleConfigureRequest(const XConfigureRequestEvent *event) {
       wc.border_width = event->border_width;
       wc.x = event->x;
       wc.y = event->y;
-      wc.width = event->width > rootWidth ? rootWidth : event->width;
-      wc.height = event->height > rootHeight ? rootHeight : event->height;
+      wc.width = event->width;
+      wc.height = event->height;
       JXConfigureWindow(display, event->window, event->value_mask, &wc);
 
    }
+
+}
+
+/** Process a configure notify event. */
+int HandleConfigureNotify(const XConfigureEvent *event) {
+
+   if(event->window != rootWindow) {
+      return 0;
+   }
+
+   if(rootWidth != event->width || rootHeight != event->height) {
+      rootWidth = event->width;
+      rootHeight = event->height;
+      shouldRestart = 1;
+      shouldExit = 1;
+   }
+
+   return 1;
 
 }
 
@@ -580,14 +606,7 @@ void HandleEnterNotify(const XCrossingEvent *event) {
 /** Process a leave notify event. */
 void HandleLeaveNotify(const XCrossingEvent *event) {
 
-   ClientNode *np;
-
    SetMousePosition(event->x_root, event->y_root);
-
-   np = FindClientByParent(event->window);
-   if(np) {
-      SetDefaultCursor(np->parent);
-   }
 
 }
 
@@ -678,41 +697,13 @@ int HandlePropertyNotify(const XPropertyEvent *event) {
 void HandleClientMessage(const XClientMessageEvent *event) {
 
    ClientNode *np;
-   long mask, flags;
 #ifdef DEBUG
    char *atomName;
 #endif
 
    np = FindClientByWindow(event->window);
    if(np) {
-      if(event->message_type == atoms[ATOM_WIN_STATE]) {
-
-         mask = event->data.l[0];
-         flags = event->data.l[1];
-
-         if(mask & WIN_STATE_STICKY) {
-            if(flags & WIN_STATE_STICKY) {
-               SetClientSticky(np, 1);
-            } else {
-               SetClientSticky(np, 0);
-            }
-         }
-
-         if(mask & WIN_STATE_HIDDEN) {
-            if(flags & WIN_STATE_HIDDEN) {
-               np->state.status |= STAT_NOLIST;
-            } else {
-               np->state.status &= ~STAT_NOLIST;
-            }
-            UpdateTaskBar();
-            UpdatePager();
-         }
-
-      } else if(event->message_type == atoms[ATOM_WIN_LAYER]) {
-
-         SetClientLayer(np, event->data.l[0]);
-
-      } else if(event->message_type == atoms[ATOM_WM_CHANGE_STATE]) {
+      if(event->message_type == atoms[ATOM_WM_CHANGE_STATE]) {
 
          if(np->controller) {
             (np->controller)(0);
@@ -765,6 +756,12 @@ void HandleClientMessage(const XClientMessageEvent *event) {
 
          HandleNetWMState(event, np);
 
+      } else if(event->message_type == atoms[ATOM_NET_SHOWING_DESKTOP]) {
+
+         if(event->data.l[0] != showingDesktop) {
+            ShowDesktop();
+         }
+
       } else {
 
 #ifdef DEBUG
@@ -781,6 +778,8 @@ void HandleClientMessage(const XClientMessageEvent *event) {
          Restart();
       } else if(event->message_type == atoms[ATOM_JWM_EXIT]) {
          Exit();
+      } else if(event->message_type == atoms[ATOM_JWM_RELOAD]) {
+         ReloadMenu();
       } else if(event->message_type == atoms[ATOM_NET_CURRENT_DESKTOP]) {
          ChangeDesktop(event->data.l[0]);
       } else {
@@ -795,6 +794,13 @@ void HandleClientMessage(const XClientMessageEvent *event) {
 
       HandleDockEvent(event);
 
+   } else {
+#ifdef DEBUG
+         atomName = JXGetAtomName(display, event->message_type);
+         Debug("ClientMessage to unknown window (0x%x): %s",
+               event->window, atomName);
+         JXFree(atomName);
+#endif
    }
 
 }
@@ -802,7 +808,7 @@ void HandleClientMessage(const XClientMessageEvent *event) {
 /** Handle a _NET_MOVERESIZE_WINDOW request. */
 void HandleNetMoveResize(const XClientMessageEvent *event, ClientNode *np) {
 
-   long flags, gravity;
+   long flags;
    long x, y;
    long width, height;
    int deltax, deltay;
@@ -811,7 +817,6 @@ void HandleNetMoveResize(const XClientMessageEvent *event, ClientNode *np) {
    Assert(event);
    Assert(np);
 
-   gravity = event->data.l[0] & 0xFF;
    flags = event->data.l[0] >> 8;
 
    x = np->x;
@@ -832,10 +837,6 @@ void HandleNetMoveResize(const XClientMessageEvent *event, ClientNode *np) {
       height = event->data.l[4];
    }
 
-   if(gravity == 0) {
-      gravity = np->gravity;
-   }
-
    GetBorderSize(np, &north, &south, &east, &west);
    GetGravityDelta(np, &deltax, &deltay);
 
@@ -847,8 +848,8 @@ void HandleNetMoveResize(const XClientMessageEvent *event, ClientNode *np) {
    np->width = width;
    np->height = height;
 
-   if(np->state.status & STAT_FULLSCREEN) {
-      Warning("Fullscreen state will be shaped!");
+   if(JUNLIKELY(np->state.status & STAT_FULLSCREEN)) {
+      Warning(_("Fullscreen state will be shaped!"));
    }
 
    /** Reset shaped bound */
@@ -878,9 +879,11 @@ void HandleNetWMState(const XClientMessageEvent *event, ClientNode *np) {
    int actionFullScreen;
    int actionMinimize;
    int actionNolist;
+   int actionBelow;
+   int actionAbove;
    int x;
 
-   /* Up to two actions to be applied together, figure it out. */
+   /* Up to two actions to be applied together. */
    actionMaxH = 0;
    actionMaxV = 0;
    actionStick = 0;
@@ -888,6 +891,8 @@ void HandleNetWMState(const XClientMessageEvent *event, ClientNode *np) {
    actionFullScreen = 0;
    actionMinimize = 0;
    actionNolist = 0;
+   actionBelow = 0;
+   actionAbove = 0;
 
    for(x = 1; x <= 2; x++) {
       if(event->data.l[x]
@@ -911,6 +916,12 @@ void HandleNetWMState(const XClientMessageEvent *event, ClientNode *np) {
       } else if(event->data.l[x]
          == (long)atoms[ATOM_NET_WM_STATE_SKIP_TASKBAR]) {
          actionNolist = 1;
+      } else if(event->data.l[x]
+         == (long)atoms[ATOM_NET_WM_STATE_BELOW]) {
+         actionBelow = 1;
+      } else if(event->data.l[x]
+         == (long)atoms[ATOM_NET_WM_STATE_ABOVE]) {
+         actionAbove = 1;
       }
    }
 
@@ -937,6 +948,12 @@ void HandleNetWMState(const XClientMessageEvent *event, ClientNode *np) {
          np->state.status &= ~STAT_NOLIST;
          UpdateTaskBar();
       }
+      if(actionBelow && np->state.layer == LAYER_BELOW) {
+         SetClientLayer(np, LAYER_NORMAL);
+      }
+      if(actionAbove && np->state.layer == LAYER_ABOVE) {
+         SetClientLayer(np, LAYER_NORMAL);
+      }
       break;
    case 1: /* Add */
       if(actionStick) {
@@ -957,6 +974,12 @@ void HandleNetWMState(const XClientMessageEvent *event, ClientNode *np) {
       if(actionNolist) {
          np->state.status |= STAT_NOLIST;
          UpdateTaskBar();
+      }
+      if(actionBelow && np->state.layer == LAYER_NORMAL) {
+         SetClientLayer(np, LAYER_BELOW);
+      }
+      if(actionAbove && np->state.layer == LAYER_NORMAL) {
+         SetClientLayer(np, LAYER_ABOVE);
       }
       break;
    case 2: /* Toggle */
@@ -982,6 +1005,20 @@ void HandleNetWMState(const XClientMessageEvent *event, ClientNode *np) {
             SetClientFullScreen(np, 0);
          } else {
             SetClientFullScreen(np, 1);
+         }
+      }
+      if(actionBelow) {
+         if(np->state.layer == LAYER_NORMAL) {
+            SetClientLayer(np, LAYER_BELOW);
+         } else if(np->state.layer == LAYER_BELOW) {
+            SetClientLayer(np, LAYER_NORMAL);
+         }
+      }
+      if(actionAbove) {
+         if(np->state.layer == LAYER_NORMAL) {
+            SetClientLayer(np, LAYER_ABOVE);
+         } else if(np->state.layer == LAYER_ABOVE) {
+            SetClientLayer(np, LAYER_NORMAL);
          }
       }
       /* Note that we don't handle toggling of hidden per EWMH
@@ -1107,6 +1144,7 @@ void HandleUnmapNotify(const XUnmapEvent *event) {
    if(np && np->window == event->window) {
 
       if(JXCheckTypedWindowEvent(display, np->window, DestroyNotify, &e)) {
+         UpdateTime(&e);
          HandleDestroyNotify(&e.xdestroywindow);
          return;
       }
@@ -1123,6 +1161,10 @@ void HandleUnmapNotify(const XUnmapEvent *event) {
          WriteState(np);
          UpdateTaskBar();
          UpdatePager();
+
+         if(np->state.status & STAT_ACTIVE) {
+            FocusNextStacked(np);
+         }
 
       }
 
@@ -1161,7 +1203,7 @@ void DispatchBorderButtonEvent(const XButtonEvent *event, ClientNode *np) {
 
    static Time lastClickTime = 0;
    static int lastX = 0, lastY = 0;
-   static int doubleClickActive = 0;
+   static char doubleClickActive = 0;
    BorderActionType action;
    int bsize;
 
@@ -1183,7 +1225,8 @@ void DispatchBorderButtonEvent(const XButtonEvent *event, ClientNode *np) {
             MaximizeClientDefault(np);
             doubleClickActive = 0;
          } else {
-            if(MoveClient(np, event->x, event->y)) {
+            if(MoveClient(np, event->x, event->y,
+                          (event->state & Mod1Mask) ? 0 : 1)) {
                doubleClickActive = 0;
             } else {
                doubleClickActive = 1;
@@ -1222,6 +1265,53 @@ void DispatchBorderButtonEvent(const XButtonEvent *event, ClientNode *np) {
       break;
    default:
       break;
+   }
+
+}
+
+/** Update the last event time. */
+void UpdateTime(const XEvent *event) {
+
+   Time t = CurrentTime;
+
+   Assert(event);
+
+   switch(event->type) {
+   case KeyPress:
+   case KeyRelease:
+      t = event->xkey.time;
+      break;
+   case ButtonPress:
+   case ButtonRelease:
+      t = event->xkey.time;
+      break;
+   case MotionNotify:
+      t = event->xmotion.time;
+      break;
+   case EnterNotify:
+   case LeaveNotify:
+      t = event->xcrossing.time;
+      break;
+   case PropertyNotify:
+      t = event->xproperty.time;
+      break;
+   case SelectionClear:
+      t = event->xselectionclear.time;
+      break;
+   case SelectionRequest:
+      t = event->xselectionrequest.time;
+      break;
+   case SelectionNotify:
+      t = event->xselection.time;
+      break;
+   default:
+      break;
+   }
+
+   if(t != CurrentTime) {
+      if(t > eventTime || t < eventTime - 60000) {
+         eventTime = t;
+      }
    }
 
 }

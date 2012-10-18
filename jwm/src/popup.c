@@ -65,12 +65,6 @@ void ShutdownPopup() {
 void DestroyPopup() {
 }
 
-/** Calculate dimensions of a popup window given the popup text. */
-void MeasurePopupText(const char *text, int *width, int *height) {
-   *height = GetStringHeight(FONT_POPUP) + 2;
-   *width = GetStringWidth(FONT_POPUP, text) + 9;
-}
-
 /** Show a popup window. */
 void ShowPopup(int x, int y, const char *text) {
 
@@ -94,7 +88,8 @@ void ShowPopup(int x, int y, const char *text) {
    }
 
    popup.text = CopyString(text);
-   MeasurePopupText(text, &popup.width, &popup.height);
+   popup.height = GetStringHeight(FONT_POPUP) + 2;
+   popup.width = GetStringWidth(FONT_POPUP, popup.text) + 9;
 
    sp = GetCurrentScreen(x, y);
 
@@ -143,17 +138,19 @@ void ShowPopup(int x, int y, const char *text) {
          | ButtonReleaseMask;
 
       popup.window = JXCreateWindow(display, rootWindow, popup.x, popup.y,
-         popup.width, popup.height, 1, CopyFromParent,
-         InputOutput, CopyFromParent, attrMask, &attr);
-
-      ShapeRoundedRectWindow(popup.window, popup.width, popup.height);
+                                    popup.width, popup.height, 1,
+                                    CopyFromParent, InputOutput,
+                                    CopyFromParent, attrMask, &attr);
 
    } else {
-      ResetRoundedRectWindow(popup.window);
-      ShapeRoundedRectWindow(popup.window, popup.width, popup.height);
+
       JXMoveResizeWindow(display, popup.window, popup.x, popup.y,
-         popup.width, popup.height);
+                         popup.width, popup.height);
+
    }
+
+   ResetRoundedRectWindow(popup.window);
+   ShapeRoundedRectWindow(popup.window, popup.width, popup.height);
 
    popup.mx = x;
    popup.my = y;
@@ -177,14 +174,13 @@ void SetPopupDelay(const char *str) {
 
    int temp;
 
-   if(str == NULL) {
+   if(JUNLIKELY(str == NULL)) {
       return;
    }
 
    temp = atoi(str);
-
-   if(temp < 0) {
-      Warning("invalid popup delay specified: %s\n", str);
+   if(JUNLIKELY(temp < 0)) {
+      Warning(_("invalid popup delay specified: %s"), str);
    } else {
       popupDelay = temp;
    }
@@ -228,15 +224,15 @@ void DrawPopup() {
 
    JXClearWindow(display, popup.window);
 
-#if defined(USE_SHAPE) && defined(USE_XMU)
+#ifdef USE_SHAPE
    JXSetForeground(display, rootGC, colors[COLOR_POPUP_OUTLINE]);
-   XmuDrawRoundedRectangle(display, popup.window, rootGC, 0, 0, 
-      popup.width - 1, popup.height - 1,
-      CORNER_RADIUS - 1, CORNER_RADIUS - 1);
+   DrawRoundedRectangle(popup.window, rootGC, 0, 0, 
+                        popup.width - 1, popup.height - 1,
+                        CORNER_RADIUS);
 #endif
 
    RenderString(popup.window, FONT_POPUP, COLOR_POPUP_FG, 4, 1,
-      popup.width, NULL, popup.text);
+                popup.width, NULL, popup.text);
 
 }
 

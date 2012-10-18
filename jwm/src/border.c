@@ -47,7 +47,7 @@ static char *bmpFiles[BP_COUNT];
 static Region borderRegion = NULL;
 static GC borderGC;
 
-#if defined(USE_SHAPE) && defined(USE_XMU)
+#ifdef USE_SHAPE
 static Pixmap shapePixmap;
 static int shapePixmapWidth;
 static int shapePixmapHeight;
@@ -75,16 +75,16 @@ void StartupBorders() {
    for(x = 0; x < BP_COUNT; x++) {
       found = bmpFiles[x] ? 1 : 0;
       if(found) {
-         found = XReadBitmapFile(display, rootWindow, bmpFiles[x],
-            &bmpWidth, &bmpHeight, &pixmaps[x], &hotx, &hoty) == BitmapSuccess ?
-            1 : 0;
-         if(!found) {
-            Warning("bitmap could not be loaded: %s", bmpFiles[x]);
+         found = XReadBitmapFile(display, rootWindow, bmpFiles[x], &bmpWidth,
+                                 &bmpHeight, &pixmaps[x], &hotx, &hoty)
+                  == BitmapSuccess;
+         if(JUNLIKELY(!found)) {
+            Warning(_("bitmap could not be loaded: %s"), bmpFiles[x]);
          }
       }
       if(!found) {
          pixmaps[x] = JXCreateBitmapFromData(display, rootWindow,
-            (char*)bitmaps[x], 16, 16);
+                                             (char*)bitmaps[x], 16, 16);
       }
    }
 
@@ -253,7 +253,7 @@ void DrawBorder(const ClientNode *np, const XExposeEvent *expose) {
    Assert(np);
 
    /* Don't draw any more if we are shutting down. */
-   if(shouldExit) {
+   if(JUNLIKELY(shouldExit)) {
       return;
    }
 
@@ -306,7 +306,7 @@ void DrawBorder(const ClientNode *np, const XExposeEvent *expose) {
       if(np->icon && (np->state.border & BORDER_TITLE)) {
          temp = GetBorderIconSize();
          rect.x = 6;
-         rect.y = (short)(titleHeight / 2 - temp / 2);
+         rect.y = (short)((titleHeight - temp) / 2);
          rect.width = (unsigned short)temp;
          rect.height = (unsigned short)temp;
          if(XRectInRegion(borderRegion,
@@ -344,7 +344,6 @@ void DrawBorder(const ClientNode *np, const XExposeEvent *expose) {
 void DrawBorderHelper(const ClientNode *np, int drawIcon) {
 
    ColorType borderTextColor;
-   long borderTextPixel;
 
    long titleColor1, titleColor2;
    long outlineColor;
@@ -368,7 +367,6 @@ void DrawBorderHelper(const ClientNode *np, int drawIcon) {
    if(np->state.status & STAT_ACTIVE) {
 
       borderTextColor = COLOR_TITLE_ACTIVE_FG;
-      borderTextPixel = colors[COLOR_TITLE_ACTIVE_FG];
       titleColor1 = colors[COLOR_TITLE_ACTIVE_BG1];
       titleColor2 = colors[COLOR_TITLE_ACTIVE_BG2];
       outlineColor = colors[COLOR_BORDER_ACTIVE_LINE];
@@ -376,7 +374,6 @@ void DrawBorderHelper(const ClientNode *np, int drawIcon) {
    } else {
 
       borderTextColor = COLOR_TITLE_FG;
-      borderTextPixel = colors[COLOR_TITLE_FG];
       titleColor1 = colors[COLOR_TITLE_BG1];
       titleColor2 = colors[COLOR_TITLE_BG2];
       outlineColor = colors[COLOR_BORDER_LINE];
@@ -411,33 +408,33 @@ void DrawBorderHelper(const ClientNode *np, int drawIcon) {
 
       /* Draw a title bar. */
       DrawHorizontalGradient(canvas, gc, titleColor1, titleColor2,
-         1, 1, width - 2, titleHeight - 2);
+                             1, 1, width - 2, titleHeight - 2);
 
       /* Draw the icon. */
       if(np->icon && np->width >= titleHeight && drawIcon) {
-         PutIcon(np->icon, canvas, 6, titleHeight / 2 - iconSize / 2,
-            iconSize, iconSize);
+         PutIcon(np->icon, canvas, 6, (titleHeight - iconSize) / 2,
+                 iconSize, iconSize);
       }
 
       if(np->name && np->name[0] && titleWidth > 0) {
          RenderString(canvas, FONT_BORDER, borderTextColor,
-            iconSize + 6 + 4,
-            titleHeight / 2 - GetStringHeight(FONT_BORDER) / 2,
-            titleWidth, borderRegion, np->name);
+                      iconSize + 6 + 4,
+                      (titleHeight - GetStringHeight(FONT_BORDER)) / 2,
+                      titleWidth, borderRegion, np->name);
       }
 
    }
 
    /* Window outline. */
    JXSetForeground(display, gc, outlineColor);
-   
-#if defined(USE_SHAPE) && defined(USE_XMU)
+
+#ifdef USE_SHAPE
    if(np->state.status & STAT_SHADED) {
-      XmuDrawRoundedRectangle(display, canvas, gc, 0, 0, 
-         (int)width - 1, (int)north - 1, CORNER_RADIUS, CORNER_RADIUS);
+      DrawRoundedRectangle(canvas, gc, 0, 0, width - 1, north - 1,
+                           CORNER_RADIUS);
    } else {
-      XmuDrawRoundedRectangle(display, canvas, gc, 0, 0, 
-         (int)width - 1, (int)height - 1, CORNER_RADIUS, CORNER_RADIUS);
+      DrawRoundedRectangle(canvas, gc, 0, 0, width - 1, height - 1,
+                           CORNER_RADIUS);
    }
 #else
    if(np->state.status & STAT_SHADED) {
@@ -499,7 +496,6 @@ void DrawBorderButtons(const ClientNode *np, Pixmap canvas, GC gc) {
 
    Pixmap pixmap;
    long color;
-   long outlineColor;
    int offset;
    int yoffset;
    int north, south, east, west;
@@ -521,10 +517,8 @@ void DrawBorderButtons(const ClientNode *np, Pixmap canvas, GC gc) {
    /* Determine the colors to use. */
    if(np->state.status & STAT_ACTIVE) {
       color = colors[COLOR_TITLE_ACTIVE_FG];
-      outlineColor = colors[COLOR_BORDER_ACTIVE_LINE];
    } else {
       color = colors[COLOR_TITLE_FG];
-      outlineColor = colors[COLOR_BORDER_LINE];
    }
 
    /* Close button. */
@@ -652,12 +646,12 @@ void SetBorderWidth(const char *str) {
 
    int width;
 
-   if(str) {
+   if(JLIKELY(str)) {
 
       width = atoi(str);
-      if(width < MIN_BORDER_WIDTH || width > MAX_BORDER_WIDTH) {
+      if(JUNLIKELY(width < MIN_BORDER_WIDTH || width > MAX_BORDER_WIDTH)) {
          borderWidth = DEFAULT_BORDER_WIDTH;
-         Warning("invalid border width specified: %d", width);
+         Warning(_("invalid border width specified: %d"), width);
       } else {
          borderWidth = width;
       }
@@ -671,12 +665,12 @@ void SetTitleHeight(const char *str) {
 
    int height;
 
-   if(str) {
+   if(JLIKELY(str)) {
 
       height = atoi(str);
-      if(height < MIN_TITLE_HEIGHT || height > MAX_TITLE_HEIGHT) {
+      if(JUNLIKELY(height < MIN_TITLE_HEIGHT || height > MAX_TITLE_HEIGHT)) {
          titleHeight = DEFAULT_TITLE_HEIGHT;
-         Warning("invalid title height specified: %d", height);
+         Warning(_("invalid title height specified: %d"), height);
       } else {
          titleHeight = height;
       }
@@ -693,58 +687,160 @@ void SetButtonMask(BorderPixmapType pt, const char *filename) {
       bmpFiles[pt] = NULL;
    }
 
-   if(filename) {
+   if(JLIKELY(filename)) {
       bmpFiles[pt] = CopyString(filename);
       ExpandPath(&bmpFiles[pt]);
    }
 
 }
 
-#if defined(USE_SHAPE) && defined(USE_XMU)
+/** Draw a rounded rectangle. */
+void DrawRoundedRectangle(Drawable d, GC gc, int x, int y,
+                          int width, int height, int radius) {
+
+#ifdef USE_XMU
+
+   XmuDrawRoundedRectangle(display, d, gc, x, y, width, height,
+                           radius, radius);
+
+#else
+
+   XSegment segments[4];
+   XArc     arcs[4];
+
+   segments[0].x1 = x + radius;           segments[0].y1 = y;
+   segments[0].x2 = x + width - radius;   segments[0].y2 = y;
+   segments[1].x1 = x + radius;           segments[1].y1 = y + height;
+   segments[1].x2 = x + width - radius;   segments[1].y2 = y + height;
+   segments[2].x1 = x;                    segments[2].y1 = y + radius;
+   segments[2].x2 = x;                    segments[2].y2 = y + height - radius;
+   segments[3].x1 = x + width;            segments[3].y1 = y + radius;
+   segments[3].x2 = x + width;            segments[3].y2 = y + height - radius;
+   JXDrawSegments(display, d, gc, segments, 4);
+
+   arcs[0].x = x;
+   arcs[0].y = y;
+   arcs[0].width = radius * 2;
+   arcs[0].height = radius * 2;
+   arcs[0].angle1 = 90 * 64;
+   arcs[0].angle2 = 90 * 64;
+   arcs[1].x = x + width - radius * 2;
+   arcs[1].y = y;
+   arcs[1].width  = radius * 2;
+   arcs[1].height = radius * 2;
+   arcs[1].angle1 = 0 * 64;
+   arcs[1].angle2 = 90 * 64;
+   arcs[2].x = x;
+   arcs[2].y = y + height - radius * 2;
+   arcs[2].width  = radius * 2;
+   arcs[2].height = radius * 2;
+   arcs[2].angle1 = 180 * 64;
+   arcs[2].angle2 = 90 * 64;
+   arcs[3].x = x + width - radius * 2;
+   arcs[3].y = y + height - radius * 2;
+   arcs[3].width  = radius * 2;
+   arcs[3].height = radius * 2;
+   arcs[3].angle1 = 270 * 64;
+   arcs[3].angle2 = 90 * 64;
+   JXDrawArcs(display, d, gc, arcs, 4);
+
+#endif
+
+}
+
+/** Fill a rounded rectangle. */
+void FillRoundedRectangle(Drawable d, GC gc, int x, int y,
+                          int width, int height, int radius) {
+
+#ifdef USE_XMU
+
+   XmuFillRoundedRectangle(display, d, gc, x, y, width, height,
+                           radius, radius);
+
+#else
+
+   XRectangle  rects[3];
+   XArc        arcs[4];
+
+   rects[0].x = x + radius;
+   rects[0].y = y;
+   rects[0].width = width - radius * 2;
+   rects[0].height = radius;
+   rects[1].x = x;
+   rects[1].y = radius;
+   rects[1].width = width;
+   rects[1].height = height - radius * 2;
+   rects[2].x = x + radius;
+   rects[2].y = y + height - radius;
+   rects[2].width = width - radius * 2;
+   rects[2].height = radius;
+   JXFillRectangles(display, d, gc, rects, 3);
+
+   arcs[0].x = x;
+   arcs[0].y = y;
+   arcs[0].width = radius * 2;
+   arcs[0].height = radius * 2;
+   arcs[0].angle1 = 90 * 64;
+   arcs[0].angle2 = 90 * 64;
+   arcs[1].x = x + width - radius * 2 - 1;
+   arcs[1].y = y;
+   arcs[1].width  = radius * 2;
+   arcs[1].height = radius * 2;
+   arcs[1].angle1 = 0 * 64;
+   arcs[1].angle2 = 90 * 64;
+   arcs[2].x = x;
+   arcs[2].y = y + height - radius * 2 - 1;
+   arcs[2].width  = radius * 2;
+   arcs[2].height = radius * 2;
+   arcs[2].angle1 = 180 * 64;
+   arcs[2].angle2 = 90 * 64;
+   arcs[3].x = x + width - radius * 2 - 1;
+   arcs[3].y = y + height - radius * 2 -1;
+   arcs[3].width  = radius * 2;
+   arcs[3].height = radius * 2;
+   arcs[3].angle1 = 270 * 64;
+   arcs[3].angle2 = 90 * 64;
+   JXFillArcs(display, d, gc, arcs, 4);
+
+#endif
+
+}
+
 
 /** Clear the shape mask of a window. */
-void ResetRoundedRectWindow(const Window srrw) {
-   Assert(srrw);	
-   JXShapeCombineMask(display, srrw, ShapeBounding, 0, 0, None, ShapeSet);
+void ResetRoundedRectWindow(Window w) {
+#ifdef USE_SHAPE
+   JXShapeCombineMask(display, w, ShapeBounding, 0, 0, None, ShapeSet);
+#endif
 }
  
 /** Set the shape mask on a window to give a rounded boarder. */
-void ShapeRoundedRectWindow(const Window srrw, int width, int height) {
-
-   Assert(srrw);
+void ShapeRoundedRectWindow(Window w, int width, int height) {
+#ifdef USE_SHAPE
 
    if(width > shapePixmapWidth || height > shapePixmapHeight) {
       if(shapePixmap != None) {
          JXFreePixmap(display, shapePixmap);
       }
-      shapePixmap = JXCreatePixmap(display, srrw, width, height, 1);
+      shapePixmap = JXCreatePixmap(display, w, width, height, 1);
       if(shapeGC == None) {
          shapeGC = JXCreateGC(display, shapePixmap, 0, NULL);
       }
+      shapePixmapWidth = width;
+      shapePixmapHeight = height;
    }
 
    JXSetForeground(display, shapeGC, 0);
-   JXFillRectangle(display, shapePixmap, shapeGC, 0, 0, width, height);
+   JXFillRectangle(display, shapePixmap, shapeGC, 0, 0,
+                   width + 1, height + 1);
 
    /* Corner bound radius -1 to allow slightly better outline drawing */
    JXSetForeground(display, shapeGC, 1);
-   XmuFillRoundedRectangle(display, shapePixmap, shapeGC, 0, 0, 
-      (int)width, (int)height, CORNER_RADIUS - 1, CORNER_RADIUS - 1);
+   FillRoundedRectangle(shapePixmap, shapeGC, 0, 0, width, height,
+                        CORNER_RADIUS - 1);
    
-   JXShapeCombineMask(display, srrw, ShapeBounding, 0, 0, shapePixmap,
-      ShapeSet);
-
-}
-
-#else
-
-/** Clear the shape mask of a window. */
-void ResetRoundedRectWindow(const Window srrw) {
-}
-
-/** Set the shape mask on a window to give a rounded boarder. */
-void ShapeRoundedRectWindow(const Window srrw, int width, int height) {
-}
+   JXShapeCombineMask(display, w, ShapeBounding, 0, 0, shapePixmap, ShapeSet);
 
 #endif
+}
 

@@ -22,7 +22,7 @@ typedef struct ScaledIconNode {
    Pixmap mask;
 #ifdef USE_XRENDER
    Picture imagePicture;
-   Picture maskPicture;
+   Picture alphaPicture;
 #endif
 
    struct ScaledIconNode *next;
@@ -41,6 +41,8 @@ typedef struct IconNode {
    struct IconNode *prev;         /**< The previous icon in the list. */
 
 } IconNode;
+
+extern IconNode emptyIcon;
 
 #ifdef USE_ICONS
 
@@ -68,7 +70,7 @@ void AddIconPath(char *path);
  * @param height The height of the icon to display.
  */
 void PutIcon(IconNode *icon, Drawable d, int x, int y,
-   int width, int height);
+             int width, int height);
 
 /** Load an icon for a client.
  * @param np The client.

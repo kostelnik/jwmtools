@@ -18,12 +18,13 @@
 #include "misc.h"
 #include "winmenu.h"
 #include "command.h"
+#include "parse.h"
 
 /** Number of root menus to support. */
 #define ROOT_MENU_COUNT 10
 
 static Menu *rootMenu[ROOT_MENU_COUNT];
-static int showExitConfirmation = 1;
+static char showExitConfirmation = 1;
 
 static void ExitHandler(ClientNode *np);
 static void PatchRootMenu(Menu *menu);
@@ -99,8 +100,8 @@ void SetRootMenu(const char *indexes, Menu *m) {
 
       /* Get the index and make sure it's in range. */
       index = indexes[x] - '0';
-      if(index < 0 || index >= ROOT_MENU_COUNT) {
-         Warning("invalid root menu specified: \"%c\"", indexes[x]);
+      if(JUNLIKELY(index < 0 || index >= ROOT_MENU_COUNT)) {
+         Warning(_("invalid root menu specified: \"%c\""), indexes[x]);
          continue;
       }
 
@@ -129,7 +130,7 @@ void SetRootMenu(const char *indexes, Menu *m) {
 }
 
 /** Set whether a dialog should be shown before exiting. */
-void SetShowExitConfirmation(int v) {
+void SetShowExitConfirmation(char v) {
    showExitConfirmation = v;
 }
 
@@ -221,11 +222,24 @@ void Restart() {
 void Exit() {
    if(showExitConfirmation) {
       ShowConfirmDialog(NULL, ExitHandler,
-         "Exit JWM",
-         "Are you sure?",
-         NULL);
+                        _("Exit JWM"),
+                        _("Are you sure?"),
+                        NULL);
    } else {
       ExitHandler(NULL);
+   }
+}
+
+/** Reload the menu. */
+void ReloadMenu() {
+	shouldReload = 1;
+   if(!menuShown) {
+      ShutdownRootMenu();
+      DestroyRootMenu();
+      InitializeRootMenu();
+      ParseConfig(configPath);
+      StartupRootMenu();
+	   shouldReload = 0;
    }
 }
 

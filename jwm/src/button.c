@@ -9,6 +9,7 @@
 
 #include "jwm.h"
 #include "button.h"
+#include "border.h"
 #include "font.h"
 #include "color.h"
 #include "main.h"
@@ -17,13 +18,12 @@
 #include "gradient.h"
 
 static void GetScaledIconSize(IconNode *ip, int maxsize,
-   int *width, int *height);
+                              int *width, int *height);
 
 /** Draw a button. */
 void DrawButton(ButtonNode *bp) {
 
    long outlinePixel;
-   long topPixel, bottomPixel;
    ColorType fg;
    long bg1, bg2;
 
@@ -52,8 +52,6 @@ void DrawButton(ButtonNode *bp) {
       bg1 = colors[COLOR_MENU_BG];
       bg2 = colors[COLOR_MENU_BG];
       outlinePixel = colors[COLOR_MENU_BG];
-      topPixel = colors[COLOR_MENU_BG];
-      bottomPixel = colors[COLOR_MENU_BG];
       break;
    case BUTTON_MENU_ACTIVE:
       fg = COLOR_MENU_ACTIVE_FG;
@@ -64,24 +62,18 @@ void DrawButton(ButtonNode *bp) {
       } else {
          outlinePixel = colors[COLOR_MENU_ACTIVE_DOWN];
       }
-      topPixel = colors[COLOR_MENU_ACTIVE_UP];
-      bottomPixel = colors[COLOR_MENU_ACTIVE_DOWN];
       break;
    case BUTTON_TASK:
       fg = COLOR_TASK_FG;
       bg1 = colors[COLOR_TASK_BG1];
       bg2 = colors[COLOR_TASK_BG2];
-      topPixel = colors[COLOR_TASK_UP];
-      bottomPixel = colors[COLOR_TASK_DOWN];
-      outlinePixel = bottomPixel;
+      outlinePixel = colors[COLOR_TASK_DOWN];
       break;
    case BUTTON_TASK_ACTIVE:
       fg = COLOR_TASK_ACTIVE_FG;
       bg1 = colors[COLOR_TASK_ACTIVE_BG1];
       bg2 = colors[COLOR_TASK_ACTIVE_BG2];
-      topPixel = colors[COLOR_TASK_ACTIVE_DOWN];
-      bottomPixel = colors[COLOR_TASK_ACTIVE_UP];
-      outlinePixel = bottomPixel;
+      outlinePixel = colors[COLOR_TASK_ACTIVE_UP];
       break;
    case BUTTON_MENU:
    default:
@@ -89,49 +81,35 @@ void DrawButton(ButtonNode *bp) {
       bg1 = colors[COLOR_MENU_BG];
       bg2 = colors[COLOR_MENU_BG];
       outlinePixel = colors[COLOR_MENU_DOWN];
-      topPixel = colors[COLOR_MENU_UP];
-      bottomPixel = colors[COLOR_MENU_DOWN];
       break;
    }
 
    /* Draw the background. */
-   switch(bp->type) {
-   case BUTTON_TASK:
-      /* Flat taskbuttons (only icon) for widths < 48 */
-      if(width < 48) {
-         break;
-      }
-      /* conditional fallthrough is intended */  
-   default:
+   /* Flat taskbuttons for widths < 48 */
+   if(bp->type != BUTTON_TASK || width >= 48) {
 
       /* Draw the button background. */
       JXSetForeground(display, gc, bg1);
       if(bg1 == bg2) {
          /* single color */
          JXFillRectangle(display, drawable, gc,
-            x + 1, y + 1, width - 1, height - 1);
+                         x + 1, y + 1, width - 1, height - 1);
       } else {
          /* gradient */
          DrawHorizontalGradient(drawable, gc, bg1, bg2,
-            x + 1, y + 1, width - 2, height - 1);
+                                x + 1, y + 1, width - 2, height - 1);
       }
 
       /* Draw the outline. */
       JXSetForeground(display, gc, outlinePixel);
-#ifdef USE_XMU
-      XmuDrawRoundedRectangle(display, drawable, gc, x, y, 
-         width, height, 3, 3);
-#else
-      JXDrawRectangle(display, drawable, gc, x, y, width, height);
-#endif
+      DrawRoundedRectangle(drawable, gc, x, y, width, height, 3);
 
-      break;
    }
 
    /* Determine the size of the icon (if any) to display. */
    iconWidth = 0;
    iconHeight = 0;
-   if (bp->icon) {
+   if(bp->icon) {
       if(width < height) {
          GetScaledIconSize(bp->icon, width - 5, &iconWidth, &iconHeight);
       } else {
@@ -154,32 +132,28 @@ void DrawButton(ButtonNode *bp) {
    }
 
    /* Determine the offset of the text in the button. */
-   switch(bp->alignment) {
-   case ALIGN_CENTER:
-      xoffset = width / 2 - (iconWidth + textWidth) / 2;
+   if(bp->alignment == ALIGN_CENTER) {
+      xoffset = (width - iconWidth - textWidth + 1) / 2;
       if(xoffset < 0) {
          xoffset = 0;
       }
-      break;
-   case ALIGN_LEFT:
-   default:
+   } else {
       xoffset = 3;
-      break;
    }
 
    /* Display the icon. */
    if(bp->icon) {
-      yoffset = height / 2 - iconHeight / 2;
+      yoffset = (height - iconHeight + 1) / 2;
       PutIcon(bp->icon, drawable, x + xoffset, y + yoffset,
-         iconWidth, iconHeight);
+              iconWidth, iconHeight);
       xoffset += iconWidth + 2;
    }
 
    /* Display the label. */
    if(bp->text && textWidth) {
-      yoffset = height / 2 - textHeight / 2;
+      yoffset = (height - textHeight + 1) / 2;
       RenderString(drawable, bp->font, fg, x + xoffset, y + yoffset,
-         textWidth, NULL, bp->text);
+                   textWidth, NULL, bp->text);
    }
 
 }
@@ -205,29 +179,36 @@ void ResetButton(ButtonNode *bp, Drawable d, GC g) {
 
 /** Get the scaled size of an icon for a button. */
 void GetScaledIconSize(IconNode *ip, int maxsize,
-   int *width, int *height) {
+                       int *width, int *height) {
 
-   double ratio;
+   int ratio;
 
    Assert(ip);
    Assert(width);
    Assert(height);
 
-   /* width to height */
+   if(ip == &emptyIcon) {
+      *width = maxsize;
+      *height = maxsize;
+      return;
+   }
+
    Assert(ip->image->height > 0);
-   ratio = (double)ip->image->width / ip->image->height;
+
+   /* Fixed point with 16-bit fraction. */
+   ratio = (ip->image->width << 16) / ip->image->height;
 
    if(ip->image->width > ip->image->height) {
 
       /* Compute size wrt width */
-      *width = maxsize * ratio;
-      *height = *width / ratio;
+      *width = (maxsize * ratio) >> 16;
+      *height = (*width << 16) / ratio;
 
    } else {
 
       /* Compute size wrt height */
-      *height = maxsize / ratio;
-      *width = *height * ratio;
+      *height = (maxsize << 16) / ratio;
+      *width = (*height * ratio) >> 16;
 
    }
 

@@ -111,8 +111,8 @@ void ReadClientStrut(ClientNode *np) {
    unsigned char *value;
    long *lvalue;
    long leftWidth, rightWidth, topHeight, bottomHeight;
-   long leftStart, leftEnd, rightStart, rightEnd;
-   long topStart, topEnd, bottomStart, bottomEnd;
+   long leftStart, rightStart;
+   long topStart, bottomStart;
 
    RemoveClientStrut(np);
 
@@ -138,13 +138,9 @@ void ReadClientStrut(ClientNode *np) {
          topHeight = lvalue[2];
          bottomHeight = lvalue[3];
          leftStart = lvalue[4];
-         leftEnd = lvalue[5];
          rightStart = lvalue[6];
-         rightEnd = lvalue[7];
          topStart = lvalue[8];
-         topEnd = lvalue[9];
          bottomStart = lvalue[10];
-         bottomEnd = lvalue[11];
 
          if(leftWidth > 0) {
             box.width = leftWidth;
@@ -459,7 +455,7 @@ void ConstrainSize(ClientNode *np) {
    BoundingBox box;
    const ScreenType *sp;
    int north, south, east, west;
-   float ratio, minr, maxr;
+   int ratio, minr, maxr;
 
    Assert(np);
 
@@ -490,16 +486,17 @@ void ConstrainSize(ClientNode *np) {
 
    if(np->sizeFlags & PAspect) {
 
-      ratio = (float)box.width / box.height;
+      /* Fixed point with a 16-bit fraction. */
+      ratio = (box.width << 16) / box.height;
 
-      minr = (float)np->aspect.minx / np->aspect.miny;
+      minr = (np->aspect.minx << 16) / np->aspect.miny;
       if(ratio < minr) {
-         box.height = (int)((float)box.width / minr);
+         box.height = (box.width << 16) / minr;
       }
 
-      maxr = (float)np->aspect.maxx / np->aspect.maxy;
+      maxr = (np->aspect.maxx << 16) / np->aspect.maxy;
       if(ratio > maxr) {
-         box.width = (int)((float)box.height * maxr);
+         box.width = (box.height * maxr) >> 16;
       }
 
    }
@@ -517,7 +514,7 @@ void PlaceMaximizedClient(ClientNode *np, int horiz, int vert) {
    BoundingBox box;
    const ScreenType *sp;
    int north, south, east, west;
-   float ratio, minr, maxr;
+   int ratio, minr, maxr;
 
    np->oldx = np->x;
    np->oldy = np->y;
@@ -547,16 +544,17 @@ void PlaceMaximizedClient(ClientNode *np, int horiz, int vert) {
 
    if(np->sizeFlags & PAspect) {
 
-      ratio = (float)box.width / box.height;
+      /* Fixed point with a 16-bit fraction. */
+      ratio = (box.width << 16) / box.height;
 
-      minr = (float)np->aspect.minx / np->aspect.miny;
+      minr = (np->aspect.minx << 16) / np->aspect.miny;
       if(ratio < minr) {
-         box.height = (int)((float)box.width / minr);
+         box.height = (box.width << 16) / minr;
       }
 
-      maxr = (float)np->aspect.maxx / np->aspect.maxy;
+      maxr = (np->aspect.maxx << 16) / np->aspect.maxy;
       if(ratio > maxr) {
-         box.width = (int)((float)box.height * maxr);
+         box.width = (box.height * maxr) >> 16;
       }
 
    }
