@@ -28,6 +28,13 @@ char *SCreateSize(int length) {
   return s;
 }
 
+char *SCreateAppend(const char *src, const char * suffix) {
+  // return new string crated by concatenation of 2 strings
+  char *s = SCreateSize(strlen(src)+strlen(suffix));
+  sprintf(s,"%s%s",src,suffix);
+  return s;
+}
+
 void SDump(const char * s) {
   // print string to stderr
   if (s==NULL)
