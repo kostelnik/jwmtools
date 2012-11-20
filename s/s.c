@@ -35,6 +35,37 @@ char *SCreateAppend(const char *src, const char * suffix) {
   return s;
 }
 
+char *SCreateFromFile(const char *filename) {
+  // read entire content of file to string
+  SCheck(filename,"undefined filename");
+  FILE *f = (FILE*)fopen(filename,"r");
+  if (!f) {
+    SCheck(f,"cannot create file");
+    return NULL;
+  }
+  int r;
+  char *s = SCreateSize(200+1);
+  char *n = NULL;
+  char *o = NULL;
+  while (!feof(f)) {
+    // read line from file
+    r = fread(s,sizeof(char),200,f);
+    //printf("r=%d\n",r);
+    s[r] = '\0';
+    // append read text to n 
+    if (!n)
+      o = SCreate(s);                           
+    else {
+      o = SCreateAppend(n,s);         // NOTE: no offense to this lib author (me)
+      SFree(n);                       //       but this does not seems simpler
+    }
+    n = o;
+  } 
+  fclose(f);
+  SFree(s);
+  return n;
+}
+
 void SDump(const char * s) {
   // print string to stderr
   if (s==NULL)
