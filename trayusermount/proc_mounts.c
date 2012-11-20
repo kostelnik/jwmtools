@@ -18,12 +18,39 @@ $ df -l -T -x tmpfs -x devtmpfs | grep '/media/'
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <s.h>
+#include <s.c>
 
 char * substr(char *src, int from, int len);
 char ** proc_mounts_media_list(int max, int *count, int labels_only);
 int strpos(char *src, char c);
 int proc_mounts_is_mounted(int max, char ** list, char * label);
 void proc_mounts_free(int max, char ** list);
+int proc_mounts_changed(char ** old);
+
+int proc_mounts_changed(char ** old) {
+  // return 1 if /proc/mounts changed since last time
+
+  // read entire content to "n"  
+  char *n = SCreateFromFile("/proc/mounts");
+  
+  // did it changed?
+  int r = 0;
+  if (!(*old)) {
+    r = 1;
+  } else {
+    if (strcmp(n,*old)!=0)
+      r = 1;
+  }
+  
+  // remember old
+  if (*old)
+    SFree(*old);
+  *old = n;
+    
+  //printf("r=%d n=%s\n",r,n);
+  return r;
+}
 
 int strpos(char *src, char c) {
   // return position of char position in string
