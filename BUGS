@@ -48,6 +48,7 @@ JWM's own bugs
 - occasionally segfault (2-3 times per year)
 
 - jwm very often place windows under top panel, esp. fontforge but others too
+  (this bug is still present in latest SVN revision 581 of jwm)
 
 - with same panel height as gnome (25 pixelov) jwm shows 16px icons, gnome was displaying better 22px icons
 
