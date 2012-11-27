@@ -17,6 +17,7 @@ int main (int argc, char *argv[]) {
   printf("  KINGSTON    = %d\n",proc_mounts_is_mounted(10,pole,"KINGSTON"));
   printf("  SONY_MP3_PL = %d\n",proc_mounts_is_mounted(10,pole,"SONY_MP3_PL"));
   printf("  TRANSCEND   = %d\n",proc_mounts_is_mounted(10,pole,"TRANSCEND"));
+  printf("  USB DISK    = %d\n",proc_mounts_is_mounted(10,pole,"USB DISK"));
   
   for (i=0; i<c; i++)
     printf("mounted: [%d] = %s\n",i,pole[i]);
