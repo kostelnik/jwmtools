@@ -11,6 +11,7 @@ all:
 	(cd trayusermount && make all)
 	(cd trayvolume && make all)
 	(cd trayweather && make all)
+	(cd slock && make all)
 
 clean:
 	(cd appmenugen && make clean)
@@ -23,6 +24,7 @@ clean:
 	(cd trayusermount && make clean)
 	(cd trayvolume && make clean)
 	(cd trayweather && make clean)
+	(cd slock && make clean)
 
 install:
 	@echo Installing to ${PREFIX}
@@ -49,6 +51,8 @@ install:
 	cp trayvolume/trayvolume.glade ${PREFIX}/share/jwmtools/
 	cp trayweather/trayweather ${PREFIX}/bin/
 	cp trayweather/trayweather.glade ${PREFIX}/share/jwmtools/
+	cp slock/slock ${PREFIX}/bin/
+	chmod +s ${PREFIX}/bin/slock
 	
 	
 	
