@@ -9,6 +9,7 @@ FIXME: I know there is libblkid but I am offline right now
 /dev/sdb1: LABEL="ADATA" UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" TYPE="ext2" 
 /dev/mapper/esda4: UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" TYPE="ext2" 
 /dev/sdc1: LABEL="KINGSTON" UUID="xxxx-xxxx" TYPE="vfat" 
+/dev/sdb1: LABEL="USB DISK" UUID="xxxx-xxxx" TYPE="vfat" 
 
 We only want this information:
 
@@ -143,6 +144,7 @@ int blkid_parse (void) {
     /dev/mapper/esda4: UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" TYPE="ext2" 
     /dev/sdc1: LABEL="KINGSTON" UUID="xxxx-xxxx" TYPE="vfat" 
     /dev/sdd1: SEC_TYPE="msdos" LABEL="SONY_MP3_PL" UUID="xxxx-xxxx" TYPE="vfat" 
+    /dev/sdb1: LABEL="USB DISK" UUID="xxxx-xxxx" TYPE="vfat"
     */
 
     // parse LABEL="something"    

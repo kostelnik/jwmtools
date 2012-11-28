@@ -1,7 +1,6 @@
 include ../config.mk
 
-PROGS=trayusermount 
-#blkid_test 
+PROGS=trayusermount blkid_test 
 
 CC = gcc
 CFLAGS  = -I. -ggdb
