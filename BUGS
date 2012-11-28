@@ -30,6 +30,10 @@ Bugs in tools
     
    or completely ignore xorg layout switching and use my own shortcutkey in jwmrc and some 
    `togglelayout` command.
+   
+   NOTE: it appears that it just need to reexecute that setxkbcommand when both keyboards are present.
+         So perhaps some "daemon" which would monitor keyboard change (/sys/somewhere) and when new
+         keyboard is connected, reexecute that command above.
 
 
 JWM's own bugs
