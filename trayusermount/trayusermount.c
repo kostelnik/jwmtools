@@ -44,6 +44,7 @@ void update_media_button(GtkButton *button, char **captions, int index, int coun
 }
 
 char * sys_block_dir = NULL;
+char * proc_mounts_str = NULL;
 
 void update_icon(void) {
   // update icon depending on number of mounted media devices
@@ -53,9 +54,11 @@ void update_icon(void) {
   // FIXME: make it for more than 10 buttons and more universally
  
   // only if /sys/block changed since last time
-  if (scandirstrchanged("/sys/block",&sys_block_dir) == 1) {
-  //if (1) {
-    printf("/sys/block changed...\n");
+  int a = scandirstrchanged("/sys/block",&sys_block_dir);
+  int b = proc_mounts_changed(&proc_mounts_str);
+  
+  if ( (a == 1)||(b == 1) ) {
+    //printf("/sys/block or /proc/mounts changed...\n");
     blkid_parse();
     //blkid_debug();
 
@@ -71,24 +74,26 @@ void update_icon(void) {
     
       // hide unused labels
       gtk_widget_set_visible((GtkWidget*)button[i],strlen(blkid_labels[i])>0);
-   
     }
-  } else
-    printf("/sys/block NOT changed\n");
 
-  // display number of mounted devices
-  // FIXME: i don't need blkid fo this, only use /proc/mounts and when user click on trayicon only then parse blkid
-  char *cnt = (char*)malloc(sizeof(char)*30);
-  int c = blkid_mounted_count();
-  sprintf(cnt,"%dx",c);
-  gtk_label_set_markup((GtkLabel*)labTray1,cnt);
-  free(cnt);
-  
-  // change info label if there are no devices
-  if (c == 0)
-    gtk_label_set_markup((GtkLabel*)labInfo1,"Nie je nič pripojené");
-  else
-    gtk_label_set_markup((GtkLabel*)labInfo1,"Pripojiť alebo odpojiť?");
+    // display number of mounted devices
+    // FIXME: i don't need blkid fo this, only use /proc/mounts and when user click on trayicon only then parse blkid
+    char *cnt = (char*)malloc(sizeof(char)*30);
+    int c = blkid_mounted_count();
+    sprintf(cnt,"%dx",c);
+    gtk_label_set_markup((GtkLabel*)labTray1,cnt);
+    free(cnt);
+    
+    // change info label if there are no devices
+    if (c == 0)
+      gtk_label_set_markup((GtkLabel*)labInfo1,"Nie je nič pripojené");
+    else
+      gtk_label_set_markup((GtkLabel*)labInfo1,"Pripojiť alebo odpojiť?");
+     
+  } else {
+    // printf("/sys/block NOT changed\n");
+  }
+
 }
 
 G_MODULE_EXPORT void 
