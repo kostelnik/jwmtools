@@ -17,6 +17,8 @@ TODO: Check exit code from system('umount ...') and if it is nonzero, change tra
 #include <sys/types.h>
 #include <values.h>
 #include "blkid.c"
+#include <scandirstr.h>
+#include <scandirstr.c>
 //#include "../trayumount/proc_mounts.c"
 
 GtkBuilder *builder;
@@ -41,31 +43,38 @@ void update_media_button(GtkButton *button, char **captions, int index, int coun
   gtk_widget_set_visible((GtkWidget*)button,index < count);
 }
 
+char * sys_block_dir = NULL;
+
 void update_icon(void) {
   // update icon depending on number of mounted media devices
     
   int i;
   // set button labels
   // FIXME: make it for more than 10 buttons and more universally
-  
-  blkid_parse();
-  //blkid_debug();
+ 
+  // only if /sys/block changed since last time
+  if (scandirstrchanged("/sys/block",&sys_block_dir) == 1) {
+  //if (1) {
+    printf("/sys/block changed...\n");
+    blkid_parse();
+    //blkid_debug();
 
-  for (i=0; i<10; i++) {
-
-    // change label depending of if device is mounted or not  
-    char *poms = (char*)malloc(sizeof(char)*300);
-    if (blkid_mounted[i])
-      sprintf(poms,"Odpojiť %s",blkid_labels[i]);
-    else
-      sprintf(poms,"Pripojiť %s",blkid_labels[i]);
-    gtk_button_set_label(button[i],poms);
-    free(poms);
+    for (i=0; i<10; i++) {
+      // change label depending of if device is mounted or not  
+      char *poms = (char*)malloc(sizeof(char)*300);
+      if (blkid_mounted[i])
+        sprintf(poms,"Odpojiť %s",blkid_labels[i]);
+      else
+        sprintf(poms,"Pripojiť %s",blkid_labels[i]);
+      gtk_button_set_label(button[i],poms);
+      free(poms);
     
-    // hide unused labels
-    gtk_widget_set_visible((GtkWidget*)button[i],strlen(blkid_labels[i])>0);
+      // hide unused labels
+      gtk_widget_set_visible((GtkWidget*)button[i],strlen(blkid_labels[i])>0);
    
-  }
+    }
+  } else
+    printf("/sys/block NOT changed\n");
 
   // display number of mounted devices
   // FIXME: i don't need blkid fo this, only use /proc/mounts and when user click on trayicon only then parse blkid
