@@ -12,6 +12,7 @@ all:
 	(cd trayvolume && make all)
 	(cd trayweather && make all)
 	(cd slock && make all)
+	(cd xidletools && make all)
 
 clean:
 	(cd appmenugen && make clean)
@@ -25,6 +26,7 @@ clean:
 	(cd trayvolume && make clean)
 	(cd trayweather && make clean)
 	(cd slock && make clean)
+	(cd xidletools && make clean)
 
 install:
 	@echo Installing to ${PREFIX}
@@ -53,6 +55,8 @@ install:
 	cp trayweather/trayweather.glade ${PREFIX}/share/jwmtools/
 	cp slock/slock ${PREFIX}/bin/
 	chmod +s ${PREFIX}/bin/slock
+	cp xidletools/xidletime ${PREFIX}/bin/
+	cp xidletools/xidlerun ${PREFIX}/bin/
 	
 	
 	
