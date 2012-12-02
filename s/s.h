@@ -45,6 +45,7 @@ char *SCreate(const char * src);
 char *SCreateSize(int length);
 char *SCreateBetween(const char * src, int from, int to);
 char *SCreateReplace(const char *src, char *substring, char *replacement);
+char *SCreateAppend(const char *src, const char * suffix);
 
 // searching and comparing functions
 int SPos(char *haystack, char *needle);
