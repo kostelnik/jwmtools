@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
       fprintf(stderr,"xidletime: X screen sever query info failed\n");
       return 3;
     }
-    printf("%lu\n", info->idle);
+    //printf("%lu\n", info->idle);
 
     // is it bigger that 10s? run something
     if (info->idle > seconds*1000) {
