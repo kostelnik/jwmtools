@@ -34,7 +34,12 @@ Bugs in tools
    NOTE: it appears that it just need to reexecute that setxkbcommand when both keyboards are present.
          So perhaps some "daemon" which would monitor keyboard change (/sys/somewhere) and when new
          keyboard is connected, reexecute that command above.
+         
+         Yes, new files appear in /sys/class/input when this happen, also see bug 7
 
+7. traykeymap - When user connect 2nd keyboard and execute setxkbmap command, it may happen
+   that first keyboard when used will indicate SK layout and when typing on second keyboard
+   it will indicate US layout. Probably because it uses keyboard leds to detect layout.
 
 JWM's own bugs
 --------------
