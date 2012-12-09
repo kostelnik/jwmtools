@@ -148,7 +148,14 @@ char ** proc_mounts_media_list(int max, int * count, int labels_only) {
           sprintf(s,"%s (%s, %s)",a,typ,b);
         else
           sprintf(s,"%s",a);
-        //printf("s=__%s__\n",s);
+
+        // if label contain space, it will be encoded as \040
+        char * se = SCreateReplace(s,"\\040"," ");
+        SFree(s);
+        s = SCreate(se);
+        SFree(se);
+        //printf("s  =__%s__\n",s);
+        //printf("se =__%s__\n",se);
         
         // add it to the array
         pole[index] = s;
@@ -183,9 +190,11 @@ int proc_mounts_is_mounted(int max, char ** list, char * label) {
   // return 1 if LABEL is mounted according to LIST, 0 otherwise
   int i;
   for (i=0; i<max; i++)
-    if (list[i])
+    if (list[i]) {
+      //printf("--> comparing: '%s' and '%s'\n",list[i],label);
       if (strcmp(list[i],label)==0)
         return 1;
+    }
   return 0;
 }
 

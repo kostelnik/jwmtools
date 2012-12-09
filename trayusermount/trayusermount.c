@@ -2,7 +2,7 @@
 /*
 It require pmount, pumount, blkid.
 This applet is NOT for mounting CDROMs.
-This applet only shows devices that have label (use e2label for ext filesystem, mlabel for vfat)
+This applet only shows devices that have label (use e2label for ext filesystem, mlabel for vfat or dosfslabel)
 FIXME: it behave bit strange when user do not safely umount vfat usb key. media dirs stays there but empty and I cannot mount again or something like that
 FIXME: Currently it is limited to 10 devices
 FIXME: It reads content of /proc/mounts every 5s, perhaps there is other way, but /proc is not real files so maybe I shouldnt bother
@@ -172,7 +172,7 @@ on_button_clicked (GtkObject *object, gpointer user_data) {
   
   // if it is mounted, umount it, if not mount it
   if (blkid_mounted[button_index]==0)
-    sprintf(cmd,"pmount %s %s",blkid_devices[button_index],blkid_labels[button_index]);
+    sprintf(cmd,"pmount %s '%s'",blkid_devices[button_index],blkid_labels[button_index]);
   else
     sprintf(cmd,"pumount %s",blkid_devices[button_index]);
 
