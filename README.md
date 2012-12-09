@@ -60,8 +60,3 @@ and inexplainably segfaulted while doing so. So it instead run sysmonitor.
 When sysmonitor crash, nothing will happen to traymonitor itself, it will 
 just display info in next refresh.
 
-History
--------
-
-- 2012/10/12 - Pushed to github.
-- 2012/10/07 - Moved to git.
