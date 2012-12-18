@@ -40,7 +40,7 @@ char *SCreateFromFile(const char *filename) {
   SCheck(filename,"undefined filename");
   FILE *f = (FILE*)fopen(filename,"r");
   if (!f) {
-    SCheck(f,"cannot create file");
+    SCheck(f,"cannot open file");
     return NULL;
   }
   int r;
@@ -51,6 +51,40 @@ char *SCreateFromFile(const char *filename) {
     // read line from file
     r = fread(s,sizeof(char),200,f);
     //printf("r=%d\n",r);
+    s[r] = '\0';
+    // append read text to n 
+    if (!n)
+      o = SCreate(s);                           
+    else {
+      o = SCreateAppend(n,s);         // NOTE: no offense to this lib author (me)
+      SFree(n);                       //       but this does not seems simpler
+    }
+    n = o;
+  } 
+  fclose(f);
+  SFree(s);
+  return n;
+}
+
+char *SCreateFromCommand(const char *command) {
+  // run command, return it's std out as string
+  // NOTE: copy paste from SCreateFromFile
+  SCheck(command,"undefined filename");
+  FILE *f = (FILE*)popen(command,"r");
+  if (!f) {
+    SCheck(f,"cannot run command");
+    return NULL;
+  }
+  int r;
+  char *s = SCreateSize(200+1);
+  char *n = NULL;
+  char *o = NULL;
+  while (!feof(f)) {
+    // read line from file
+    r = fread(s,sizeof(char),200,f);
+    //printf("r=%d\n",r)
+    if (r <= 0)
+      break;
     s[r] = '\0';
     // append read text to n 
     if (!n)
