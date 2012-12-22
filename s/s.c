@@ -38,8 +38,14 @@ char *SCreateInt(const int i, const int lead) {
 
 char *SCreateAppend(const char *src, const char * suffix) {
   // return new string crated by concatenation of 2 strings
-  char *s = SCreateSize(strlen(src)+strlen(suffix));
-  sprintf(s,"%s%s",src,suffix);
+  int a = strlen(src);
+  int b = suffix==NULL ? 0 : strlen(suffix);
+  //printf("a=%d b=%d src=%s suffix=%s\n",a,b,src,suffix);
+  char *s = SCreateSize(a+b);
+  if (suffix != NULL)
+    sprintf(s,"%s%s",src,suffix);
+  else
+    sprintf(s,"%s",src);
   return s;
 }
 
@@ -48,6 +54,7 @@ char *SCreateFromFile(const char *filename) {
   SCheck(filename,"undefined filename");
   FILE *f = (FILE*)fopen(filename,"r");
   if (!f) {
+    printf("filename=%s\n",filename);
     SCheck(f,"cannot open file");
     return NULL;
   }
