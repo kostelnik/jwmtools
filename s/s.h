@@ -28,6 +28,7 @@ TODO: SCreateTrimRight(src)
 TODO: SCreateColumn(src,column_index) // from "foo bar zzz" keeps only e.g. 2nd column
 TODO: SCreateColumnRemove(s,column_index) // ignores 2nd columns
 TODO: SDebugArgs(argc,argv) debuging from cmdline, e.g. -debug 1 sets level to 1
+TODO: SCreateFromProcess(char cmd*, int maxlength)
 */
 
 #ifndef S_H
@@ -49,6 +50,7 @@ char *SCreateReplace(const char *src, char *substring, char *replacement);
 char *SCreateAppend(const char *src, const char * suffix);
 char *SCreateFromFile(const char *filename);
 char *SCreateInt(const int i, const int lead);
+char *SCreateFromCommand(const char *command);
 
 // searching and comparing functions
 int SPos(char *haystack, char *needle);
