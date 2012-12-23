@@ -13,7 +13,10 @@
 // FIXME: get seconds from commandline
 // FIXME: get precommand from commandline or use pidof or something to detect if it is running
 #define XIDLERUN_INTERVAL 300
-#define XIDLERUN_PRECOMMAND "killall slock"
+
+#define XIDLERUN_PRECOMMAND NULL
+//"killall slock"
+
 #define XIDLERUN_COMMAND "/opt/jwmtools/front/bin/slock"
 
 int main(int argc, char *argv[]) {
