@@ -240,9 +240,13 @@ main(int argc, char **argv) {
     printf("slock is already running for this user\n");
     return 1;
   }
-
+  
 	if(!(dpy = XOpenDisplay(0)))
 		die("slock: cannot open display");
+
+  // disable mouse entirely
+  system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '0'");
+
 	/* Get the number of screens in display "dpy" and blank them all. */
 	nscreens = ScreenCount(dpy);
 	locks = malloc(sizeof(Lock *) * nscreens);
@@ -265,6 +269,9 @@ main(int argc, char **argv) {
 
 	free(locks);
 	XCloseDisplay(dpy);
+
+  // enable mouse
+  system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'");
 
 	return 0;
 }

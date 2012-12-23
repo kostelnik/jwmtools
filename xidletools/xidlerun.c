@@ -8,11 +8,14 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "../libonce/libonce.h"
+#include "../libonce/libonce.c"
+
 // FIXME: this program was intended to be universal, e.g. xidlerun -s 60 -e ~/bin/mycoolscreensaver but currently it only support fixed time and fixed program
 // FIXME: get command from commandline
 // FIXME: get seconds from commandline
 // FIXME: get precommand from commandline or use pidof or something to detect if it is running
-#define XIDLERUN_INTERVAL 300
+#define XIDLERUN_INTERVAL 30
 
 #define XIDLERUN_PRECOMMAND NULL
 //"killall slock"
@@ -48,14 +51,18 @@ int main(int argc, char *argv[]) {
     // is it bigger that 10s? run something
     if (info->idle > seconds*1000) {
       // do not execute program if it is already running
+      /*
       if (strlen(XIDLERUN_PRECOMMAND) > 0) {
         printf("--> executing precommand %s\n",XIDLERUN_PRECOMMAND);
         system(XIDLERUN_PRECOMMAND);
         //sleep(2);
       }
+      */
       
       printf("--> executing command %s\n",XIDLERUN_COMMAND);
-      system(XIDLERUN_COMMAND);
+
+      if (once_process_count("slock",1) == 0) // FIXME: this is not good
+        system(XIDLERUN_COMMAND);
       //system("sleep 1m");
       
       // make sure it won't accidentaly run just after
