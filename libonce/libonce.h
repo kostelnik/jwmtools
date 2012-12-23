@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-int once_process_count(char * name); // return 1 if no other process used "name"
+int once_process_count(char * name, int mine); // return 1 if no other process used "name"
 
 #endif
 

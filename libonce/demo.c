@@ -8,7 +8,7 @@
 
 int main(int argc, char * argv[]) {
 
-  if (once_process_count("demo") > 1) {
+  if (once_process_count("demo",1) > 1) {
     printf("demo is already running\n");
     return 1;
   }   

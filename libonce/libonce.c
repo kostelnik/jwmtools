@@ -3,12 +3,16 @@
 #ifndef LIBONCE_C
 #define LIBONCE_C
 
-int once_process_count(char * name) {
+int once_process_count(char * name, int mine) {
   // how many times process is runing (0 not running, 1 once, 2 two or more times)
   // NOTE: if process is running 3 times, it will return 2 (meaning "more than once")
+  // if mine == 1 only my own processes will be shown
   
   char * command = (char*)malloc(sizeof(char)*1000);
-  sprintf(command,"pgrep -u $USER ^%s$",name);
+  if (mine == 1)
+    sprintf(command,"pgrep -u $USER ^%s$",name);
+  else
+    sprintf(command,"pgrep ^%s$",name);
   
   FILE *f = (FILE*)popen(command,"r");
   if (!f) {
@@ -17,7 +21,8 @@ int once_process_count(char * name) {
   }
 
   int a=0, b=0;
-  fscanf(f,"%d %d",&a,&b);
+  if (fscanf(f,"%d %d",&a,&b) > 2)
+    printf("note: strange fscanf result\n");
   //printf("a=%d b=%d\n",a,b);
 
   fclose(f);
