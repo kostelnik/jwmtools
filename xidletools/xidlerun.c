@@ -15,7 +15,7 @@
 // FIXME: get command from commandline
 // FIXME: get seconds from commandline
 // FIXME: get precommand from commandline or use pidof or something to detect if it is running
-#define XIDLERUN_INTERVAL 30
+#define XIDLERUN_INTERVAL 300
 
 #define XIDLERUN_PRECOMMAND NULL
 //"killall slock"
