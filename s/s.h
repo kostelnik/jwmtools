@@ -12,7 +12,8 @@ DOGMA:
     use "c" instead of 'c' for single characters
   - never change string parsed as argument (except SFree which
     also set pointer to NULL after it was freed)
-    
+
+TODO: SCreateInt, SCreateFloat    
 TODO: split into .h and .c with that ifdef macro si it can be nested
 TODO: asserts?
 TODO: SRPos
@@ -27,6 +28,7 @@ TODO: SCreateTrimRight(src)
 TODO: SCreateColumn(src,column_index) // from "foo bar zzz" keeps only e.g. 2nd column
 TODO: SCreateColumnRemove(s,column_index) // ignores 2nd columns
 TODO: SDebugArgs(argc,argv) debuging from cmdline, e.g. -debug 1 sets level to 1
+TODO: SCreateFromProcess(char cmd*, int maxlength)
 */
 
 #ifndef S_H
@@ -47,6 +49,8 @@ char *SCreateBetween(const char * src, int from, int to);
 char *SCreateReplace(const char *src, char *substring, char *replacement);
 char *SCreateAppend(const char *src, const char * suffix);
 char *SCreateFromFile(const char *filename);
+char *SCreateInt(const int i, const int lead);
+char *SCreateFromCommand(const char *command);
 
 // searching and comparing functions
 int SPos(char *haystack, char *needle);

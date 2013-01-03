@@ -5,6 +5,7 @@ include config.mk
 
 SRC = slock.c
 OBJ = ${SRC:.c=.o}
+CC = gcc
 
 all: options slock
 
