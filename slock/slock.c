@@ -22,6 +22,9 @@
 #include <bsd_auth.h>
 #endif
 
+#include "../libonce/libonce.h"
+#include "../libonce/libonce.c"
+
 typedef struct {
 	int screen;
 	Window root, win;
@@ -232,6 +235,11 @@ main(int argc, char **argv) {
 #ifndef HAVE_BSD_AUTH
 	pws = getpw();
 #endif
+
+  if (once_process_count("slock",1) > 1) {
+    printf("slock is already running for this user\n");
+    return 1;
+  }
 
 	if(!(dpy = XOpenDisplay(0)))
 		die("slock: cannot open display");
