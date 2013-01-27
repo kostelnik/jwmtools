@@ -2,10 +2,10 @@ include ../config.mk
 
 PROGS=sysmonitor
 
-CC = g++
+CC = gcc
 CFLAGS  = -I. -ggdb
 LIBS    = -L. -L/usr/lib
-CFLAGS += -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing
+CFLAGS += -Wall -Werror -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing
 CFLAGS += `pkg-config --cflags cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0`
 CFLAGS += -DVERSION=\"${VERSION}\" -DPREFIX=\"${PREFIX}\"
 LIBS   += `pkg-config --libs cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0`

@@ -11,4 +11,4 @@ unsigned long long sysmonitor_cpu_idle(void);
 void sysmonitor_net(unsigned long long *recv, unsigned long long *tran);
 unsigned long long sysmonitor_disk_load(void);
 
-#endif SYSMONITOR_DATA
+#endif

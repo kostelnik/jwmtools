@@ -19,6 +19,13 @@ char * name = NULL;
 char * script = NULL;
 
 G_MODULE_EXPORT void
+on_winTray1_delete_event (GtkObject *object, gpointer user_data);
+G_MODULE_EXPORT void
+on_eventbox1_button_press_event (GtkObject *object, gpointer user_data);
+static gboolean
+time_handler(GtkWidget *widget);
+
+G_MODULE_EXPORT void
 on_winTray1_delete_event (GtkObject *object, gpointer user_data) {
   // correctly terminate application
   gtk_main_quit();
@@ -103,7 +110,7 @@ int main (int argc, char *argv[]) {
   winSetup1 = GTK_WIDGET (gtk_builder_get_object (builder, "winSetup1"));
 
   // unique name
-  gtk_window_set_title(winTray1,name);
+  gtk_window_set_title((GtkWindow*)winTray1,name);
 
   // widgets
   labTray1 = (GtkLabel*)gtk_builder_get_object(builder, "labTray1");

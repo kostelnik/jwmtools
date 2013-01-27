@@ -2,6 +2,7 @@
 
 #include <X11/extensions/scrnsaver.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char *argv[]) {
   XScreenSaverInfo *info = XScreenSaverAllocInfo();

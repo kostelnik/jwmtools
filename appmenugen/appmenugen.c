@@ -15,6 +15,7 @@ Example:
 #include <stdlib.h>
 #include <string.h>
 
+
 // item category for apps menu
 enum 
   ItemCategory {
@@ -38,6 +39,15 @@ typedef struct {
   char * exec;
   char * icon;
 } Item;
+
+Item * item_new(const ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon);
+void item_free(Item * item);
+gint item_compare(gconstpointer a, gconstpointer b);
+void item_print(gpointer ptr, gpointer user_data);
+void jwm_menu_begin(const gchar * label, const gchar * icon);
+void jwm_menu_end();
+void jwm_program(gpointer ptr, gpointer user_data);
+void jwm_category(GPtrArray *items, const gchar * category, int id);
 
 Item * item_new(const ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon) {
   // create one item

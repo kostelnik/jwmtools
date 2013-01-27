@@ -15,4 +15,4 @@
 char * scandirstr(char * path);
 int scandirstrchanged(char * path, char ** old);
 
-#endif SCANDIRSTR_H
+#endif
