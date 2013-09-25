@@ -8,8 +8,11 @@ Requirements
 
 Compilation
 ===========
-- Edit config.mk and change PREFIX if you want to install it somewhere
-  else than default location (/opt/jwmtools/VERSION/...)
+- Edit config.mk:
+  - change PREFIX if you want to install it somewhere else than 
+    default location (/opt/jwmtools/VERSION/...)
+  - change SYS_BATTERY_PATH according to location of ACPI dir
+    of your battery
 - make clean all && sudo make install
 
 Troubleshooting
