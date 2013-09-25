@@ -5,6 +5,7 @@ all:
 	(cd movemousecursor && make all)
 	(cd s && make all)
 	(cd sysmonitor && make all)
+	(cd traybattery && make all)
 	(cd traykeymap && make all)
 	(cd traymonitor && make all)
 	(cd trayscript && make all)
@@ -20,6 +21,7 @@ clean:
 	(cd libonce && make clean)
 	(cd s && make clean)
 	(cd sysmonitor && make clean)
+	(cd traybattery && make clean)
 	(cd traykeymap && make clean)
 	(cd traymonitor && make clean)
 	(cd trayscript && make clean)
@@ -37,6 +39,8 @@ install:
 	cp appmenugen/appmenugen ${PREFIX}/bin/
 	cp movemousecursor/movemousecursor ${PREFIX}/bin/
 	cp sysmonitor/sysmonitor ${PREFIX}/bin/
+	cp traybattery/traybattery ${PREFIX}/bin/
+	cp traybattery/traybattery.glade ${PREFIX}/share/jwmtools/
 	cp traykeymap/traykeymap ${PREFIX}/bin/
 	cp traykeymap/traykeymap.glade ${PREFIX}/share/jwmtools/
 	cp traymonitor/traymonitor ${PREFIX}/bin/
@@ -58,9 +62,4 @@ install:
 	chmod +s ${PREFIX}/bin/slock
 	cp xidletools/xidletime ${PREFIX}/bin/
 	cp xidletools/xidlerun ${PREFIX}/bin/
-	
-	
-	
-	
-	
 	

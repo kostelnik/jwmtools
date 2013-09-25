@@ -2,22 +2,15 @@
 
 #include <gtk/gtk.h>
 #include <stdlib.h>
-//#include <unistd.h>
 #include <string.h>
 #include "s.h"
 #include "s.c"
-//#include <sys/types.h>
-//#include <values.h>
-//#include <gdk/gdkx.h>
-
-// FIXME: automatically detect best path or at least let user decide from commandline which path is the best
-//#define SYS_BATERY_PATH "/sys/bus/acpi/drivers/battery/PNP0C0A:00/power_supply/C16D/"
 
 // Here are some sample data for debuging, uncomment whichever you want
-#define SYS_BATERY_PATH "data/1/"
-//#define SYS_BATERY_PATH "data/2/"
-//#define SYS_BATERY_PATH "data/3/"
-//#define SYS_BATERY_PATH "data/4/"
+//#define SYS_BATTERY_PATH "data/1/"
+//#define SYS_BATTERY_PATH "data/2/"
+//#define SYS_BATTERY_PATH "data/3/"
+//#define SYS_BATTERY_PATH "data/4/"
 
 GtkBuilder *builder;
 GtkWidget *winTray1;
@@ -31,7 +24,7 @@ int read_int(char * file) {
   // read integer from single /sys/... file
   int i = 0;
   FILE *f;
-  char *fn = SCreateAppend(SYS_BATERY_PATH,file);
+  char *fn = SCreateAppend(SYS_BATTERY_PATH,file);
   if ((f = fopen(fn,"r"))) {
     fscanf(f,"%d",&i);
     fclose(f);
@@ -43,7 +36,7 @@ int read_int(char * file) {
 char * read_word(char * file) {
   // read word from single /sys/... file
   // FIXME: this actually reads entire file! including EOL so SEqual is not working
-  char *fn = SCreateAppend(SYS_BATERY_PATH,file);
+  char *fn = SCreateAppend(SYS_BATTERY_PATH,file);
   char *s = SCreateFromFile(fn);
   SFree(fn);
   return s;
@@ -108,16 +101,17 @@ update(GtkWidget *widget) {
 
 int main (int argc, char *argv[]) {
   // test if battery file exists
-  if (!g_file_test(SYS_BATERY_PATH"charge_now", G_FILE_TEST_EXISTS)) {
-    fprintf(stderr, "error: battery file '%scharge_now' does not exist\n       Please change SYS_BATERY_PATH directive in traybattery.c and recompile it\n", SYS_BATERY_PATH);
+  if (!g_file_test(SYS_BATTERY_PATH"charge_now", G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, SYS_BATTERY_PATH"zzz\n" );
+    fprintf(stderr, "error: battery file '"SYS_BATTERY_PATH"charge_now' does not exist\n       Please change SYS_BATTERY_PATH directive in config.mk and recompile it\n");
     return 1;
   }  
-  if (!g_file_test(SYS_BATERY_PATH"charge_full", G_FILE_TEST_EXISTS)) {
-    fprintf(stderr, "error: battery file '%scharge_full' does not exist\n       Please change SYS_BATERY_PATH directive in traybattery.c and recompile it\n", SYS_BATERY_PATH);
+  if (!g_file_test(SYS_BATTERY_PATH"charge_full", G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, "error: battery file '"SYS_BATTERY_PATH"charge_full' does not exist\n       Please change SYS_BATTERY_PATH directive in config.mk and recompile it\n");
     return 2;
   }  
-  if (!g_file_test(SYS_BATERY_PATH"status", G_FILE_TEST_EXISTS)) {
-    fprintf(stderr, "error: battery file '%sstatus' does not exist\n       Please change SYS_BATERY_PATH directive in traybattery.c and recompile it\n", SYS_BATERY_PATH);
+  if (!g_file_test(SYS_BATTERY_PATH"status", G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, "error: battery file '"SYS_BATTERY_PATH"status' does not exist\n       Please change SYS_BATTERY_PATH directive in config.mk and recompile it\n");
     return 3;
   }  
 
