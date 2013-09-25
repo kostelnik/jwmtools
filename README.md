@@ -6,6 +6,9 @@ Various tools for jwm window manager.
 Tray applets
 ------------
 
+- **traybattery** displays battery status (charge in percents and status icon)
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/traybattery.png)
+
 - **traykeymap** displays current keyboard layout.
 ![](https://github.com/kostelnik/jwmtools/raw/master/doc/traykeymap.png)
 
