@@ -245,7 +245,8 @@ main(int argc, char **argv) {
 		die("slock: cannot open display");
 
   // disable mouse entirely
-  system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '0'");
+  if (system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '0'") != 0)
+    fprintf(stderr,"error: xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '0'\n");
 
 	/* Get the number of screens in display "dpy" and blank them all. */
 	nscreens = ScreenCount(dpy);
@@ -271,7 +272,8 @@ main(int argc, char **argv) {
 	XCloseDisplay(dpy);
 
   // enable mouse
-  system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'");
+  if (system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'") != 0);
+    fprintf(stderr,"error: xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'\n");
 
 	return 0;
 }

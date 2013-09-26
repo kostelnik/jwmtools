@@ -17,6 +17,7 @@ all:
 clean:
 	(cd appmenugen && make clean)
 	(cd movemousecursor && make clean)
+	(cd libonce && make clean)
 	(cd s && make clean)
 	(cd sysmonitor && make clean)
 	(cd traykeymap && make clean)

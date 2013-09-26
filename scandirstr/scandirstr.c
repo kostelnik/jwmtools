@@ -68,4 +68,4 @@ int scandirstrchanged(char * path, char ** old) {
   return b;
 }
 
-#endif SCANDIRSTR_C
+#endif

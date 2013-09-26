@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <X11/Xlib.h>
 
+void movemousecursor(int x, int y);
+
 void movemousecursor(int x, int y) {
   // move cursor to [x,y]
   Display *dpy;

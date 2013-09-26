@@ -187,13 +187,13 @@ unsigned long long sysmonitor_disk_load(void) {
   // disk usage statistics from /proc/diskstats (return ms spent reading or writing, 10th argument)
   FILE *fp = fopen("/proc/diskstats","r");
   //printf("/proc/diskstats = %d\n",fp);
-  unsigned long long a, b, c, d, e, f, g, h, i, j, k, l=0, m, z=1;
+  unsigned long long c, d, e, f, g, h, i, j, k, l=0, z=1;
   char * name = (char*)malloc(sizeof(char)*256);
   while (z == 1) {
     z = fscanf(fp,"%s",name);
     //printf("z=%Ld name=%s\n",z,name);
     if (strcmp(name,"sda")==0) {
-      z = fscanf(fp,"%Ld %Ld %Ld %Ld %Ld %Ld %Ld %Ld %Ld %Ld\n", &c, &d, &e, &f, &g, &h, &i, &j, &k, &l, &m);
+      z = fscanf(fp,"%Ld %Ld %Ld %Ld %Ld %Ld %Ld %Ld %Ld %Ld\n", &c, &d, &e, &f, &g, &h, &i, &j, &k, &l);
       //printf("z=%Ld name=%s l=%Ld\n",z,name,l);
     }
   }

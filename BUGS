@@ -40,6 +40,9 @@ Bugs in tools
 7. traykeymap - When user connect 2nd keyboard and execute setxkbmap command, it may happen
    that first keyboard when used will indicate SK layout and when typing on second keyboard
    it will indicate US layout. Probably because it uses keyboard leds to detect layout.
+   
+8. trayusermount - incorrectly display 2 mounted disks when they are both named "DISK" and one is mouted and other is not, it should display them as 
+   one mounted and one not mounted
 
 JWM's own bugs
 --------------
