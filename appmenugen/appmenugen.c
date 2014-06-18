@@ -34,13 +34,13 @@ enum
 
 // structure to hold menu items
 typedef struct {
-  ItemCategory category;
+  enum ItemCategory category;
   char * name;
   char * exec;
   char * icon;
 } Item;
 
-Item * item_new(const ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon);
+Item * item_new(const enum ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon);
 void item_free(Item * item);
 gint item_compare(gconstpointer a, gconstpointer b);
 void item_print(gpointer ptr, gpointer user_data);
@@ -49,7 +49,7 @@ void jwm_menu_end();
 void jwm_program(gpointer ptr, gpointer user_data);
 void jwm_category(GPtrArray *items, const gchar * category, int id);
 
-Item * item_new(const ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon) {
+Item * item_new(const enum ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon) {
   // create one item
   Item *i = (Item*)malloc(sizeof(Item));
   i->category = category;
@@ -92,7 +92,7 @@ void item_print(gpointer ptr, gpointer user_data) {
     item->name,
     item->exec,
     item->icon,
-    (int)user_data);
+    (int)(long)user_data);
 }
 
 void jwm_menu_begin(const gchar * label, const gchar * icon) {
@@ -108,7 +108,7 @@ void jwm_menu_end() {
 void jwm_program(gpointer ptr, gpointer user_data) {
   // print item for JWM menu
   Item *item = (Item*)ptr;
-  if (item->category == (int)user_data) {
+  if (item->category == (int)(long)user_data) {
     if (item->icon==NULL) {
       printf("item->name = %s\n",item->name);
       g_error("item->icon is null");
@@ -137,7 +137,7 @@ void jwm_program(gpointer ptr, gpointer user_data) {
 void jwm_category(GPtrArray *items, const gchar * category, int id) {
   // print one submenu
   jwm_menu_begin(category,"folder.png");
-  g_ptr_array_foreach(items,jwm_program,(gpointer)id);
+  g_ptr_array_foreach(items,jwm_program,(gpointer)(long)id);
   jwm_menu_end();
 }
 
@@ -174,7 +174,7 @@ int main(int argc, char * argv[]) {
     // sort it to categories in application menu
 
     // determine best matching category
-    ItemCategory c = icOther;
+    enum ItemCategory c = icOther;
     for (guint i=0; i<length; i++) {
       //printf("  Category[%d]: %s\n",i,cats[i]);
       if (strstr("DesktopSettings, HardwareSettings, Monitor, PackageManager, Settings, System, X-GNOME-NetworkSettings, X-GNOME-PersonalSettings, X-LXDE-Settings, X-Red-Hat-Base, X-SuSE-ControlCenter-System, X-XFCE",cats[i]))

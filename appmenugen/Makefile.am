@@ -1,0 +1,11 @@
+
+AM_CFLAGS = -std=c11 $(JWMT_CFLAGS)
+AM_CPPFLAGS = -DVERSION=\"${VERSION}\" -DPREFIX=\"${PREFIX}\"
+AM_LDFLAGS = $(JWMT_LIBS)
+
+bin_PROGRAMS = appmenugen
+
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = appmenugen
+
+appmenugen_SOURCES = appmenugen.c
+

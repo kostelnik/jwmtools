@@ -10,8 +10,8 @@
 #include <errno.h>
 #include <dirent.h>
 
-#include "../../jwmtools/s/s.h"
-#include "../../jwmtools/s/s.c"
+#include "s.h"
+#include "s.c"
 
 char * scandirstr(char * path) {
   // return \n separated string of directory listing, e.g "foo\nbar\nsomething.txt\0"

@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../libonce/libonce.h"
-#include "../libonce/libonce.c"
+#include "libonce.h"
+#include "libonce.c"
 
 // FIXME: this program was intended to be universal, e.g. xidlerun -s 60 -e ~/bin/mycoolscreensaver but currently it only support fixed time and fixed program
 // FIXME: get command from commandline

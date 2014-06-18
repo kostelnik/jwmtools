@@ -297,7 +297,7 @@ void STests(int level) {
   
   // test
   SFree(a);
-  STestI((int)a,0,"string free and set to NULL");
+  STestI((int)(long)a,0,"string free and set to NULL");
         
   // test
   a = SCreate("0123456789");

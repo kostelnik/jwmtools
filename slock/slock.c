@@ -22,8 +22,8 @@
 #include <bsd_auth.h>
 #endif
 
-#include "../libonce/libonce.h"
-#include "../libonce/libonce.c"
+#include "libonce.h"
+#include "libonce.c"
 
 typedef struct {
 	int screen;

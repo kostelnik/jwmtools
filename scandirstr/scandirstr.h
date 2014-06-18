@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <dirent.h>
 
-#include "../../jwmtools/s/s.h"
+#include "s.h"
 
 char * scandirstr(char * path);
 int scandirstrchanged(char * path, char ** old);
