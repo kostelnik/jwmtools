@@ -14,6 +14,7 @@ Example:
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 
 // item category for apps menu
@@ -48,6 +49,7 @@ void jwm_menu_begin(const gchar * label, const gchar * icon);
 void jwm_menu_end();
 void jwm_program(gpointer ptr, gpointer user_data);
 void jwm_category(GPtrArray *items, const gchar * category, int id);
+char * jwm_xml_entities(const char * s);
 
 Item * item_new(const ItemCategory category, const gchar* name, const gchar* exec, const gchar* icon) {
   // create one item
@@ -87,12 +89,12 @@ gint item_compare(gconstpointer a, gconstpointer b) {
 void item_print(gpointer ptr, gpointer user_data) {
   // print item for debuging purposes
   Item *item = (Item*)ptr;
-  printf("c=%2d  n=%-20s  e=%-15s  i=%-15s ud=%d\n",
+  printf("c=%2d  n=%-20s  e=%-15s  i=%-15s ud=%ld\n",
     item->category,
     item->name,
     item->exec,
     item->icon,
-    (int)user_data);
+    (intptr_t)user_data);
 }
 
 void jwm_menu_begin(const gchar * label, const gchar * icon) {
@@ -105,10 +107,25 @@ void jwm_menu_end() {
   printf("  </Menu>\n");
 }
 
+char * jwm_xml_entities(const char * s) {
+  // convert & to &amp; in string
+  size_t i;
+  gchar *n = (gchar*)malloc(sizeof(gchar) * (strlen(s) + 1)); // FIXME: actual length + number of & or something
+  for (i = 0; i < strlen(s); i++) {
+    if (s[i] == '&') {
+      n[i] = '+'; 
+    } else {
+      n[i] = s[i];
+    }
+  }
+  n[strlen(s)] = '\0';
+  return n;
+}
+
 void jwm_program(gpointer ptr, gpointer user_data) {
   // print item for JWM menu
   Item *item = (Item*)ptr;
-  if (item->category == (int)user_data) {
+  if (item->category == (intptr_t)user_data) {
     if (item->icon==NULL) {
       printf("item->name = %s\n",item->name);
       g_error("item->icon is null");
@@ -119,15 +136,15 @@ void jwm_program(gpointer ptr, gpointer user_data) {
       || (g_str_has_suffix(item->icon,".xpm"))
       || (g_str_has_suffix(item->icon,".svg"))
       || (g_str_has_suffix(item->icon,".jpg")) )
-      printf("    <Program icon=\"%s\" label=\"%s\">%s</Program>\n",item->icon,item->name,item->exec);
+      printf("    <Program icon=\"%s\" label=\"%s\">%s</Program>\n",item->icon,jwm_xml_entities(item->name),item->exec);
     else {
       // test if there is xpm in pixmaps but not png (e.g. aumix has only xpm)
       char *s = (char*)malloc(sizeof(char)*1000);
       sprintf(s,"/usr/share/pixmaps/%s.xpm",item->icon);
       if (g_file_test(s,G_FILE_TEST_EXISTS))
-        printf("    <Program icon=\"%s.xpm\" label=\"%s\">%s</Program>\n",item->icon,item->name,item->exec);
+        printf("    <Program icon=\"%s.xpm\" label=\"%s\">%s</Program>\n",item->icon,jwm_xml_entities(item->name),item->exec);
       else
-        printf("    <Program icon=\"%s.png\" label=\"%s\">%s</Program>\n",item->icon,item->name,item->exec);
+        printf("    <Program icon=\"%s.png\" label=\"%s\">%s</Program>\n",item->icon,jwm_xml_entities(item->name),item->exec);
       g_free(s);
       
     }
@@ -137,8 +154,24 @@ void jwm_program(gpointer ptr, gpointer user_data) {
 void jwm_category(GPtrArray *items, const gchar * category, int id) {
   // print one submenu
   jwm_menu_begin(category,"folder.png");
-  g_ptr_array_foreach(items,jwm_program,(gpointer)id);
+  //g_ptr_array_foreach(items,jwm_program,(gpointer)id);
+  g_ptr_array_foreach(items,jwm_program,(gpointer)(intptr_t)id);
   jwm_menu_end();
+}
+
+void fix(gchar *path);
+
+void fix(gchar *path) {
+    // replace %U and %f and %F with \0\0
+    if (path != NULL) {
+        size_t i, len = strlen(path);
+        for (i = 0; i < len; i++) {    
+            if (path[i] == '%') {
+                path[i] = '\0';
+            }
+        }
+    }
+    fprintf(stderr, "%s\n", path);
 }
 
 int main(int argc, char * argv[]) {
@@ -168,6 +201,9 @@ int main(int argc, char * argv[]) {
     char **cats = g_key_file_get_string_list(kf,"Desktop Entry","Categories",&length,NULL);
     gchar *name = g_key_file_get_value(kf,"Desktop Entry","Name",NULL);
     gchar *exec = g_key_file_get_value(kf,"Desktop Entry","Exec",NULL);
+ 
+    fix(exec);
+
     gchar *icon = g_key_file_get_value(kf,"Desktop Entry","Icon",NULL);
     gchar *type = g_key_file_get_value(kf,"Desktop Entry","Type",NULL);
     gboolean no_display = g_key_file_get_boolean(kf,"Desktop Entry","NoDisplay",NULL);
@@ -177,7 +213,7 @@ int main(int argc, char * argv[]) {
     ItemCategory c = icOther;
     for (guint i=0; i<length; i++) {
       //printf("  Category[%d]: %s\n",i,cats[i]);
-      if (strstr("DesktopSettings, HardwareSettings, Monitor, PackageManager, Settings, System, X-GNOME-NetworkSettings, X-GNOME-PersonalSettings, X-LXDE-Settings, X-Red-Hat-Base, X-SuSE-ControlCenter-System, X-XFCE",cats[i]))
+      if (strstr("DesktopSettings, HardwareSettings, Monitor, PackageManager, Settings, System, X-GNOME-NetworkSettings, X-GNOME-PersonalSettings, X-LXDE-Settings, X-SuSE-ControlCenter-System, X-XFCE",cats[i]))
         c = icSettings;
       if (strstr("ArcadeGame, BlocksGame, BoardGame, CardGame, Game, LogicGame",cats[i]))
         c = icGames;
