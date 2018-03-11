@@ -1,0 +1,270 @@
+<?xml version="1.0"?>
+<JWM>
+    <!-- menu -->
+    <RootMenu height="24" onroot="6">
+        <!-- favorite -->
+        <Program icon="firefox.png" label="Firefox">firefox</Program>
+        <Program icon="google-chrome.png" label="Chrome">chrome</Program>
+        <Program icon="libreoffice-calc.png" label="LibreOffice Calc">libreoffice --calc</Program>
+        <Program icon="libreoffice-impress.png" label="LibreOffice Impress">libreoffice --impress</Program>
+        <Program icon="libreoffice-writer.png" label="LibreOffice Writer">libreoffice --writer</Program>
+        <Separator />        
+        <!-- places -->
+        <Program icon="desktop.png" label="Pracovná plocha">nautilus ~/plocha</Program>
+        <Program icon="gnome-dev-removable.png" label="Vymeniteľné médiá">nautilus /media/$USER</Program>
+        <Program icon="user-home.png" label="Domovský adresár">nautilus ~/</Program>
+        <Separator />        
+        <!-- all apps -->
+        <Menu icon="preferences-system-windows.png" label="Všetky aplikácie">
+            <Include>exec:/opt/jwmtools/0.1/bin/appmenugen</Include>
+        </Menu>
+        <!-- system -->
+        <Menu icon="computer.png" label="Počítač">
+            <Program icon="terminal.png" label="Terminál">xterm -fg white -bg black -fa monospace -fs 11</Program>
+            <Separator />
+            <Program icon="preferences-system.png" label="Nastavenia">unity-control-center --overview</Program>
+            <Program icon="system-software-update.png" label="Aktualizácie">/usr/bin/update-manager</Program>
+            <Separator />
+            <!-- Program icon="system-lock-screen.png" label="Lock">/opt/jwmtools/0.1/bin/slock</Program -->
+            <Program icon="system-users.png" label="Prepnúť používateľa">dm-tool switch-to-greeter</Program>
+            <Exit confirm="false" icon="gnome-logout.png" label="Odhlásiť"/>
+            <Program icon="reboot-notifier.png" label="Reštartovať">gxmessage -center -title "Reštartovať" -center "Skutočne reštartovať počítač?" -buttons "Zrušiť:1,Reštartovať:2" -default "Zrušiť"; if [ "$?" = "2" ]; then reboot; fi</Program>
+            <Program icon="system-shutdown.png" label="Vypnúť">gxmessage -center -title "Vypnúť" -center "Skutočne vypnúť počítač?" -buttons "Zrušiť:1,Vypnúť:2" -default "Zrušiť"; if [ "$?" = "2" ]; then poweroff; fi</Program>
+        </Menu>
+        <!-- run -->
+        <Program icon="window-new.png" label="Spustiť">gmrun</Program>
+   </RootMenu>
+
+   <Group>
+      <Class>Pidgin</Class>
+      <Option>sticky</Option>
+   </Group>
+
+   <Group>
+      <Name>xterm</Name>
+      <!-- Option>maximized</Option -->
+      <Option>icon:terminal.png</Option>
+   </Group>
+
+   <Group>
+      <Name>*LibreOffice*</Name>
+      <Option>maximized</Option>
+   </Group>
+
+   <Group>
+      <Name>chrome</Name>
+      <Option>maximized</Option>
+   </Group>
+
+   <Group>
+      <Name>Chromium</Name>
+      <Option>maximized</Option>
+   </Group>
+
+   <!-- Additional tray attributes: autohide, width, border, layer, layout -->
+   <Tray x="0" y="-1" height="24" border="0">
+
+      <TrayButton label="Menu" border="false">root:6</TrayButton>
+      <!-- TrayButton label="Miesta" border="false">root:7</TrayButton>
+      <TrayButton label="Systém" border="false">root:8</TrayButton -->
+
+      <!-- show desktop button  -->
+      <TrayButton icon="user-desktop.png">showdesktop</TrayButton>
+
+      <TaskList maxwidth="256"/>
+
+      <Dock />
+
+      <Clock format="%H:%M  %a %e. %b">gsimplecal</Clock>
+
+   </Tray>
+
+   <!-- Visual Styles -->
+
+   <WindowStyle>
+
+      <Font>DejaVu Sans-9</Font>
+      <Width>6</Width>
+      <Height>22</Height>
+
+      <Active>
+         <Text>white</Text>
+         <Title>#6c89ad</Title>
+         <Outline>black</Outline>
+         <Opacity>1.0</Opacity>
+      </Active>
+
+      <Inactive>
+         <Text>white</Text>
+         <Title>#bebdbd</Title>
+         <Outline>black</Outline>
+         <Opacity>0.5</Opacity>
+      </Inactive>
+
+   </WindowStyle>
+
+   <TaskListStyle>
+      <Font>DejaVu Sans-9</Font>
+      <ActiveForeground>black</ActiveForeground>
+      <ActiveBackground>#6c89ad</ActiveBackground>
+      <Foreground>gray50</Foreground>
+      <Background>gray90</Background>
+   </TaskListStyle>
+
+   <!-- Additional TrayStyle attribute: insert -->
+   <TrayStyle>
+      <Font>DejaVu Sans-9</Font>
+      <Background>#edeceb</Background>
+      <Foreground>black</Foreground>
+      <Opacity>1.0</Opacity>
+   </TrayStyle>
+
+   <MenuStyle>
+      <Font>DejaVu Sans-9</Font>
+      <Foreground>black</Foreground>
+      <Background>gray90</Background>
+      <ActiveForeground>white</ActiveForeground>
+      <ActiveBackground>#70849d</ActiveBackground>
+   </MenuStyle>
+
+   <PopupStyle>
+      <Font>DejaVu Sans-9</Font>
+      <Outline>black</Outline>
+      <Foreground>black</Foreground>
+      <Background>yellow</Background>
+   </PopupStyle>
+
+   <IconPath>/usr/share/icons/Tango/32x32/apps</IconPath>
+   <IconPath>/usr/share/icons/Tango/32x32/categories</IconPath>
+   <IconPath>/usr/share/icons/Tango/32x32/actions</IconPath>
+   <IconPath>/usr/share/icons/Tango/32x32/places</IconPath>
+   <IconPath>/usr/share/icons/Tango/32x32/devices</IconPath>
+
+   <IconPath>/usr/share/icons/Tango/24x24/apps</IconPath>
+   <IconPath>/usr/share/icons/Tango/24x24/categories</IconPath>
+   <IconPath>/usr/share/icons/Tango/24x24/actions</IconPath>
+   <IconPath>/usr/share/icons/Tango/24x24/places</IconPath>
+   <IconPath>/usr/share/icons/Tango/24x24/devices</IconPath>
+ 
+   <IconPath>/usr/share/icons/gnome/32x32/apps</IconPath>
+   <IconPath>/usr/share/icons/gnome/32x32/categories</IconPath>
+   <IconPath>/usr/share/icons/gnome/32x32/actions</IconPath>
+   <IconPath>/usr/share/icons/gnome/32x32/places</IconPath>
+   <IconPath>/usr/share/icons/gnome/32x32/devices</IconPath>
+
+   <IconPath>/usr/share/icons/gnome/24x24/apps</IconPath>
+   <IconPath>/usr/share/icons/gnome/24x24/categories</IconPath>
+   <IconPath>/usr/share/icons/gnome/24x24/actions</IconPath>
+   <IconPath>/usr/share/icons/gnome/24x24/places</IconPath>
+   <IconPath>/usr/share/icons/gnome/24x24/devices</IconPath>
+
+   <IconPath>/usr/share/icons/hicolor/128x128/apps</IconPath>
+   <IconPath>/usr/share/icons/hicolor/48x48/apps</IconPath>
+   <IconPath>/usr/share/icons/hicolor/32x32/apps</IconPath>
+   <IconPath>/usr/share/icons/hicolor/24x24/apps</IconPath>
+   <IconPath>/usr/share/icons/hicolor/scalable/apps</IconPath>
+
+   <IconPath>/usr/share/icons</IconPath>
+   <IconPath>/usr/share/pixmaps</IconPath>
+
+   <!-- Virtual Desktops -->
+   <!-- Desktop tags can be contained within Desktops for desktop names. -->
+   <Desktops width="1" height="1">
+      <!-- Default background. Note that a Background tag can be
+           contained within a Desktop tag to give a specific background
+           for that desktop.
+       -->
+      <Background type="solid">black</Background>
+   </Desktops>
+
+   <!-- Double click speed (in milliseconds) -->
+   <DoubleClickSpeed>400</DoubleClickSpeed>
+
+   <!-- Double click delta (in pixels) -->
+   <DoubleClickDelta>2</DoubleClickDelta>
+
+   <!-- The focus model (sloppy or click) -->
+   <FocusModel>click</FocusModel>
+
+   <!-- The snap mode (none, screen, or border) -->
+   <SnapMode distance="10">border</SnapMode>
+
+   <!-- The move mode (outline or opaque) -->
+   <MoveMode coordinates="off">outline</MoveMode>
+
+   <!-- The resize mode (outline or opaque) -->
+   <ResizeMode coordinates="off">outline</ResizeMode>
+
+   <!-- StartupCommand>xrdb ~/.Xdefaults</StartupCommand -->
+   <StartupCommand>numlockx on</StartupCommand>
+   <!-- StartupCommand>xinput --set-prop "Genius" "Device Accel Constant Deceleration" "3"</StartupCommand -->
+   <!-- StartupCommand>xinput --set-prop "ImPS/2 Generic Wheel Mouse" "Device Accel Constant Deceleration" "3"</StartupCommand -->
+   <!-- StartupCommand>xinput --set-prop "Genius USB LaserStream(TM) Mouse" "Device Accel Constant Deceleration" "3"</StartupCommand -->
+   <!-- StartupCommand>xinput --set-prop "HP HP USB 1000dpi Laser Mouse" "Device Accel Constant Deceleration" "2"</StartupCommand -->
+
+   <StartupCommand>/usr/bin/nautilus -n</StartupCommand>
+   <StartupCommand>/usr/bin/skype</StartupCommand>
+   <StartupCommand>/usr/bin/pidgin</StartupCommand>
+
+    <!--
+    <StartupCommand>setxkbmap -option compose:rwin,grp:switch,grp:alt_shift_toggle us,sk -variant ,qwerty terminate:ctrl_alt_bksp</StartupCommand>
+    <StartupCommand>sleep 2; setxkbmap -option compose:rwin,grp:switch,grp:alt_shift_toggle us,sk -variant ,qwerty terminate:ctrl_alt_bksp</StartupCommand>
+    -->
+   <StartupCommand>setxkbmap -option compose:rwin,grp:switch,grp:alt_shift_toggle us,sk -variant ,qwerty terminate:ctrl_alt_bksp</StartupCommand>
+    <!--
+    <StartupCommand>xset -dpms</StartupCommand>
+    <StartupCommand>xset s 3600 3600</StartupCommand>
+    -->
+
+   <!-- Key bindings -->
+   <Key key="Up">up</Key>
+   <Key key="Down">down</Key>
+   <Key key="Right">right</Key>
+   <Key key="Left">left</Key>
+   <!-- Key key="h">left</Key>
+   <Key key="j">down</Key>
+   <Key key="k">up</Key>
+   <Key key="l">right</Key -->
+   <Key key="Return">select</Key>
+   <Key key="Escape">escape</Key>
+
+   <Key mask="A" key="Tab">nextstacked</Key>
+   <!-- Key mask="4" key="#">desktop#</Key -->
+
+    <!--
+   <Key mask="4" key="X">exec:LANG=sk_SK.UTF-8 xterm -fg white -bg black -fa monospace -fs 11 -geometry 158x59</Key>
+   <Key mask="4" key="C">exec:LANG=sk_SK.UTF-8 xterm -fg white -bg black -fa monospace -fs 11 -geometry 158x59 -e "sleep 0.1; LANGUAGE=en_US mc"</Key>
+   <Key mask="4" key="R">exec:LANG=sk_SK.UTF-8 gksu "xterm -fg white -bg '#660000' -fa monospace -fs 11 -geometry 158x59"</Key>
+    -->
+
+   <Key mask="" key="XF86PowerOff">exec:/opt/jwmtools/0.1/bin/poweroffdialog-simple 3</Key>
+
+   <Key mask="" key="Print">exec:scrot</Key>
+   <Key mask="C" key="Print">exec:scrot --focused</Key>
+
+   <!-- Sweex USB keyboard -->
+   <!-- Key mask="" key="XF86Sleep">exec:/opt/jwmtools/0.1/bin/slock</Key -->
+   <!-- Key mask="" key="XF86Explorer">exec:pcmanfm ~/</Key -->
+   <Key mask="" key="XF86Calculator">exec:galculator</Key>
+   <Key mask="" key="XF86HomePage">exec:firefox</Key>
+   <!-- Key mask="" key="XF86Mail">exec:firefox</Key -->
+   <!-- Key mask="" key="XF86Back">exec:gmessage "nothing"</Key -->
+   <!-- Key mask="" key="XF86Forward">exec:gmessage "nothing"</Key -->
+   <!-- Key mask="" key="XF86AudioLowerVolume">exec:/opt/jwmtools/0.1/bin/pavolumedown</Key>
+   <Key mask="" key="XF86AudioRaiseVolume">exec:/opt/jwmtools/0.1/bin/pavolumeup</Key -->
+
+   <Key mask="4" key="F1">window</Key>
+
+   <Key mask="A" key="F1">restart</Key>
+   <!-- Key mask="A" key="F1">root:1</Key -->
+   <Key mask="A" key="F2">exec:gmrun</Key>
+
+   <Key mask="A" key="F4">close</Key>
+
+   <Key mask="A" key="F7">move</Key>
+   <Key mask="A" key="F8">resize</Key>
+   <Key mask="A" key="F9">minimize</Key>
+   <Key mask="A" key="F10">maximize</Key>
+
+</JWM>
+
