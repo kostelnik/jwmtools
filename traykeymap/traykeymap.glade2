@@ -17,7 +17,7 @@
             <property name="receives_default">True</property>
             <property name="events">GDK_BUTTON1_MOTION_MASK | GDK_BUTTON2_MOTION_MASK | GDK_BUTTON3_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_STRUCTURE_MASK</property>
             <property name="extension_events">cursor</property>
-            <property name="icon_name">keyboard</property>
+            <property name="icon_name">input-keyboard</property>
           </object>
           <packing>
             <property name="position">0</property>

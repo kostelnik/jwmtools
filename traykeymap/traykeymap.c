@@ -46,12 +46,19 @@ int main (int argc, char *argv[]) {
 
   // glade builder
   builder = gtk_builder_new ();
-  gtk_builder_add_from_file (builder, "traykeymap.glade", NULL);
-  gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/traykeymap.glade", NULL);
+  if (g_file_test(MAIN_GLADE_FILE, G_FILE_TEST_EXISTS)) {
+    gtk_builder_add_from_file (builder, MAIN_GLADE_FILE, NULL);
+  } else {
+    gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/"MAIN_GLADE_FILE, NULL);
+  }
 
   // main window
   winTray1 = GTK_WIDGET (gtk_builder_get_object (builder, "winTray1"));
-  gtk_builder_connect_signals (builder, NULL);          
+  gtk_builder_connect_signals (builder, NULL);
+  if (!winTray1) {
+    fprintf(stderr, "error: winTray1 not found in glade file "MAIN_GLADE_FILE"\n");
+    return 1;
+  }
   
   // tray components
   labTray1 = (GtkLabel*)gtk_builder_get_object(builder, "labTray1");
@@ -63,7 +70,7 @@ int main (int argc, char *argv[]) {
 
   // main loop
   //g_object_unref (G_OBJECT (builder));
-  gtk_widget_show (winTray1);       
+  gtk_widget_show (winTray1);
   gtk_main ();
   
   return 0;
