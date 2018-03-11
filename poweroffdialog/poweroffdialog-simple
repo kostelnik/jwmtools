@@ -1,0 +1,14 @@
+#!/bin/bash
+# simplified poweroff dialog
+
+# first check if all devices are unmounted
+if [ "$1" != "" ]; then
+  M=`mount | grep -e '^/dev/sd' -e '^/dev/mapper/' | wc -l`
+  if [ "$M" != "$1" ]; then
+    gmessage -center -title "Poweroff" "$M mounted partitions but $1 was expected!"
+    exit
+  fi
+fi
+
+gmessage -center -title "Poweroff" -buttons "yes,no" -default yes "Turn off the computer?"
+[ "$?" = "101" ] && poweroff
