@@ -99,7 +99,7 @@ int blkid_parse (void) {
   // local variables
   char *line = SCreateSize(BLKID_MAX_LEN);
   FILE *f = (FILE*)popen("blkid","r");
-  int len = 0, a, b, index=0;
+  int /*len, */a, b, index=0;
   char *device;
   char *label;
   char ** proc;
@@ -121,8 +121,7 @@ int blkid_parse (void) {
     return -1;
   // read all lines
   while (fgets(line,BLKID_MAX_LEN,f)) {
-    len = strlen(line);
-
+    //len = strlen(line);
     //printf("LINE=%s\n",line);
 
     // end of file?

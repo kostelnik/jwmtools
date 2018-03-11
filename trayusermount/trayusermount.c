@@ -30,11 +30,11 @@ GtkImage *imgTray1;
 GtkButton * button[10];
 
 void update_icon(void);
-G_MODULE_EXPORT void on_eventbox1_scroll_event (GtkObject *object, GdkEventScroll *scroll);
-G_MODULE_EXPORT void on_button_clicked (GtkObject *object, gpointer user_data);
-G_MODULE_EXPORT void show_winMedia1 (GtkObject *object);
+G_MODULE_EXPORT void on_eventbox1_scroll_event (GtkWidget *object, GdkEventScroll *scroll);
+G_MODULE_EXPORT void on_button_clicked (GtkWidget *object, gpointer user_data);
+G_MODULE_EXPORT void show_winMedia1 (GtkWidget *object);
 void update_media_button(GtkButton *button, char **captions, int index, int count);
-int get_button_index(GtkObject *object);
+int get_button_index(GtkWidget *object);
 
 void update_media_button(GtkButton *button, char **captions, int index, int count) {
   // set caption for single button and make it visible
@@ -97,9 +97,11 @@ void update_icon(void) {
 }
 
 G_MODULE_EXPORT void 
-show_winMedia1 (GtkObject *object) {
+show_winMedia1 (GtkWidget *object) {
 
   int ww, hh;
+
+  printf("show_WinMedia1\n");
 
   // make sure it is up to date
   update_icon();
@@ -129,12 +131,12 @@ show_winMedia1 (GtkObject *object) {
     gtk_window_get_position((GtkWindow*)winMedia1,&x,&y);
     printf("winMedia1: x=%d y=%d\n",x,y);
     if (y < 24) y = 24;
-    gtk_widget_set_uposition((GtkWidget*)winMedia1,x,y);
+      gtk_window_move((GtkWindow*)winMedia1,x,y);
   }
 }
 
 G_MODULE_EXPORT void
-on_eventbox1_scroll_event (GtkObject *object, GdkEventScroll *scroll) {
+on_eventbox1_scroll_event (GtkWidget *object, GdkEventScroll *scroll) {
   // eventbox scroll event (1=down, 0=up)
   long int v = 10;
   //long int v = pa_get_volume();
@@ -147,7 +149,7 @@ on_eventbox1_scroll_event (GtkObject *object, GdkEventScroll *scroll) {
   update_icon();
 }
 
-int get_button_index(GtkObject *object) {
+int get_button_index(GtkWidget *object) {
   // return which button did we clicked (lazarus equivalent: TButton(Sender).Tag)
   int i;
   for (i=0;i<10;i++)
@@ -157,7 +159,7 @@ int get_button_index(GtkObject *object) {
 }
 
 G_MODULE_EXPORT void
-on_button_clicked (GtkObject *object, gpointer user_data) {
+on_button_clicked (GtkWidget *object, gpointer user_data) {
   // click on umount button
   int button_index = get_button_index(object);
   printf("Click on button, button_index=%d\n",button_index);
@@ -206,8 +208,11 @@ int main (int argc, char *argv[]) {
 
   // glade builder
   builder = gtk_builder_new ();
-  gtk_builder_add_from_file (builder, "trayusermount.glade", NULL);
-  gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/trayusermount.glade", NULL);
+  if (g_file_test(MAIN_GLADE_FILE, G_FILE_TEST_EXISTS)) {
+    gtk_builder_add_from_file (builder, MAIN_GLADE_FILE, NULL);
+  } else {
+    gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/"MAIN_GLADE_FILE, NULL);
+  }
 
   // main window
   winTray1 = GTK_WIDGET (gtk_builder_get_object (builder, "winTray1"));
