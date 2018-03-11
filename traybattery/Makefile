@@ -17,7 +17,7 @@ all: $(PROGS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 %: %.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LIBS) $^ $(LIBS2) -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ $(LIBS) $(LIBS2) -o $@
 #	strip $@
 
 clean:
