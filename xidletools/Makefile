@@ -6,9 +6,9 @@ CC = gcc
 CFLAGS  = -I. -ggdb
 LIBS    = -L. -L/usr/lib
 CFLAGS += -Wall -Werror -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing
-CFLAGS += `pkg-config --cflags cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0`
+CFLAGS += `pkg-config --cflags cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0 x11`
 CFLAGS += -DVERSION=\"${VERSION}\" -DPREFIX=\"${PREFIX}\"
-LIBS   += `pkg-config --libs cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0 xscrnsaver`
+LIBS   += `pkg-config --libs cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0 xscrnsaver x11`
 LIBS2   =
 
 all: $(PROGS)
@@ -17,7 +17,7 @@ all: $(PROGS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 %: %.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LIBS) $^ $(LIBS2) -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $^ $(LIBS) $(LIBS2) -o $@
 #	strip $@
 
 clean:
