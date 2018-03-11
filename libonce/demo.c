@@ -15,7 +15,7 @@ int main(int argc, char * argv[]) {
   
   while (1) {
     sleep(1);
-    printf("demo\n");
+    printf("demo, try running another instance of demo\n");
   }
 
   return 0;
