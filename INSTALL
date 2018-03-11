@@ -5,6 +5,8 @@ Requirements
 - ALSA (amixer) or Pulse audio (trayvolume)
 - METAR library (trayweather, libmdsp-dev)
 - GLIB (appmenugen, libglib-2.0)
+- XKB (traykeymap, libxkbfile-dev)
+- XSS (idletools, libxss-dev)
 
 Compilation
 ===========

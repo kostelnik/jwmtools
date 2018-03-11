@@ -63,3 +63,10 @@ and inexplainably segfaulted while doing so. So it instead run sysmonitor.
 When sysmonitor crash, nothing will happen to traymonitor itself, it will 
 just display info in next refresh.
 
+Other tools
+-----------
+
+- **poweroffdialog** Simple poweroff dialog with option to reboot or logout and few others:
+
+![](https://github.com/kostelnik/jwmtools/raw/master/doc/poweroffdialog.png)
+

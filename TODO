@@ -1,4 +1,3 @@
-
 TODO
 ----
 - trayscript if ~/.config/jwmtools/trayscript.sh is not found, show missing script path instead of empty label
@@ -10,7 +9,6 @@ TODO
   - when blocked by some process (e.g. mc), print which process is blocking umount
 - calendar (there is some component in glade, should be easy enough), current "cal -3 | gmessage -file -" is not very usefull
 - proper "turn off dialog" (also with reboot, logout, etc..), currently gmessage (and poweroff if confirmed)
-- battery applet
 - trayscript should on click run `mousepad ~/.config/jwmtools/trayscript.sh` so that I can edit it more easily
 - monitoring daemon which will monitor /sys for connected second keyboard and re-run given setxkbmap command so that it would apply to both keyboards
   otherwise 2nd connected keyboard does not have these settings
