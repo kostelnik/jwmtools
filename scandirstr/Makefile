@@ -21,5 +21,6 @@ all: $(PROGS)
 
 clean:
 	rm -f $(PROGS) *.o
+	rm -f scandir_demo
 
 
