@@ -13,7 +13,7 @@ GtkWidget *winTray1;
 GtkImage *imgTray1;
 
 void update_icon(long int v);
-G_MODULE_EXPORT void on_eventbox1_scroll_event (GtkObject *object, GdkEventScroll *scroll);
+G_MODULE_EXPORT void on_eventbox1_scroll_event (GtkWidget *object, GdkEventScroll *scroll);
 
 void update_icon(long int v) {
   // update icon depending on current volume
@@ -24,7 +24,7 @@ void update_icon(long int v) {
 }
 
 G_MODULE_EXPORT void
-on_eventbox1_scroll_event (GtkObject *object, GdkEventScroll *scroll) {
+on_eventbox1_scroll_event (GtkWidget *object, GdkEventScroll *scroll) {
   // eventbox scroll event (1=down, 0=up)
   long int v = pa_get_volume();
   printf("eventbox scroll: volume=%li\n",v);
@@ -42,8 +42,11 @@ int main (int argc, char *argv[]) {
 
   // glade builder
   builder = gtk_builder_new ();
-  gtk_builder_add_from_file (builder, "trayvolume.glade", NULL);
-  gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/trayvolume.glade", NULL);
+  if (g_file_test(MAIN_GLADE_FILE, G_FILE_TEST_EXISTS)) {
+    gtk_builder_add_from_file (builder, MAIN_GLADE_FILE, NULL);
+  } else {
+    gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/"MAIN_GLADE_FILE, NULL);
+  }
 
   // main window
   winTray1 = GTK_WIDGET (gtk_builder_get_object (builder, "winTray1"));

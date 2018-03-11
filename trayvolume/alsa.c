@@ -28,7 +28,7 @@ int alsa_get_volume(void) {
   // local variables
   char *line = SCreateSize(ALSA_MAX_LEN);
   char *s, *t;
-  int read, a, b, c, r=-1;
+  int /*read, */a, b, c, r=-1;
 
   // execute pipe
   FILE *f = popen("amixer get Master","r");
@@ -40,7 +40,7 @@ int alsa_get_volume(void) {
 
     // read one line
     fgets(line,ALSA_MAX_LEN,f);
-    read = strlen(line);
+    /*read = strlen(line);*/
     if (feof(f))
       break;
     //printf("LINE(%d)=%s\n",read,line);
