@@ -64,16 +64,19 @@ time_handler(GtkWidget *widget) {
   // download observation (2 lines (datetime + metar data) from weather.noaa.gov)
   // FIXME: perhaps I could use libcurl or something instead of wget pipe
   char * cmd = (char*)malloc(sizeof(char)*256);
-  sprintf(cmd,"wget -qO - http://weather.noaa.gov/pub/data/observations/metar/stations/%s.TXT",station);
+  //sprintf(cmd,"wget -qO - http://weather.noaa.gov/pub/data/observations/metar/stations/%s.TXT",station);
+  sprintf(cmd,"wget -qO - http://tgftp.nws.noaa.gov/data/observations/metar/decoded/%s.TXT",station);
   char * datetime = NULL;
   char * observation = NULL;
   FILE *f = (FILE*)popen(cmd,"r");
   if (f) {
     size_t len = 0;
     ssize_t i = getline(&datetime,&len,f);
-    //printf("wget: dt = '%s'\n",datetime);
+	if (i <= 0)
+    	printf("wget: dt = '%s'\n",datetime);
     i = getline(&observation,&len,f);
-    //printf("wget: o  = '%s'\n",observation);
+	if (i <= 0)
+    	printf("wget: o  = '%s'\n",observation);
     fclose(f);
   } else {
     // failed
@@ -342,7 +345,7 @@ int main (int argc, char *argv[]) {
   // glade builder
   builder = gtk_builder_new ();
   gtk_builder_add_from_file (builder, "trayweather.glade", NULL);
-  gtk_builder_add_from_file (builder, "/share/jwmtools/trayweather.glade", NULL);
+  gtk_builder_add_from_file (builder, PREFIX"/share/jwmtools/trayweather.glade", NULL);
 
   // main window
   window1 = GTK_WIDGET (gtk_builder_get_object (builder, "winWeatherTray1"));
