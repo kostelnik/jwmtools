@@ -7,7 +7,7 @@ SRC = slock.c
 OBJ = ${SRC:.c=.o}
 CC = gcc
 CFLAGS += -Wall -Werror -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing
-CFLAGS += `pkg-config --cflags cairo pango pangocairo gtk+-2.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0`
+CFLAGS += `pkg-config --cflags x11`
 CFLAGS += -DVERSION=\"${VERSION}\" -DPREFIX=\"${PREFIX}\"
 
 all: options slock
