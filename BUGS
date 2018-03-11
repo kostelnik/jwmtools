@@ -41,26 +41,6 @@ Bugs in tools
    that first keyboard when used will indicate SK layout and when typing on second keyboard
    it will indicate US layout. Probably because it uses keyboard leds to detect layout.
    
-8. trayusermount - incorrectly display 2 mounted disks when they are both named "DISK" and one is mouted and other is not, it should display them as 
-   one mounted and one not mounted
-
-JWM's own bugs
---------------
-- on panel, there is 1px outer border so if you move cursor to the corner 
-  of the screen and click, nothing will happen because you clicked on that
-  border, you have to move 1px inward and then click, very unergonomic!
-   
-- sometimes no window has focus. Usually when stardict is running
-  and is minimized to tray, but it can happen anytime.
-   
-- occasionally segfault (2-3 times per year)
-
-- jwm very often place windows under top panel, esp. fontforge but others too
-  (this bug is still present in latest SVN revision 581 of jwm)
-
-- with same panel height as gnome (25 pixelov) jwm shows 16px icons, gnome was displaying better 22px icons
-
-- If I set "Super_L <number>" for desktop switching, then "Super_L 0" should switch to Desktop #10, now only 9 desktops are supported instead of 10
-
-- iconify using mouse scroll on window border is very confusing and prone to mistakes, at least allow me to turn it of in config file 
-
+8. trayusermount - incorrectly display 2 mounted disks when they are both named "DISK" and 
+   one is mouted and other is not, it should display them as one mounted and one not 
+   mounted.
