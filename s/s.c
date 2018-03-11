@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 
 #include "s.h"
 
@@ -118,9 +119,9 @@ char *SCreateFromCommand(const char *command) {
 void SDump(const char * s) {
   // print string to stderr
   if (s==NULL)
-    fprintf(stderr,"SDump(-,%d): NULL\n",(size_t)s);
+    fprintf(stderr,"SDump(-,%ld): NULL\n",(size_t)s);
   else
-    fprintf(stderr,"SDump(%d,%d): \"%s\"\n",strlen(s),(size_t)s,s);
+    fprintf(stderr,"SDump(%ld,%ld): \"%s\"\n",strlen(s),(size_t)s,s);
 }
 
 int SPos(char *haystack, char *needle) {
@@ -297,7 +298,7 @@ void STests(int level) {
   
   // test
   SFree(a);
-  STestI((int)a,0,"string free and set to NULL");
+  STestI((intptr_t)a,0,"string free and set to NULL");
         
   // test
   a = SCreate("0123456789");
