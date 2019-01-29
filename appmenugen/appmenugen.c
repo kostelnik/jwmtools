@@ -195,6 +195,11 @@ int main(int argc, char * argv[]) {
     // load .desktop file
     GKeyFile *kf = g_key_file_new();
     gboolean b = g_key_file_load_from_file(kf, fn, G_KEY_FILE_NONE, NULL);
+    if (!b) {
+        fprintf(stderr, "error: cannot load .desktop file %s\n", fn);
+        g_key_file_free(kf);
+        continue;
+    }
     g_assert(b);
     // load categories
     gsize length = 0;
