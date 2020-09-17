@@ -16,6 +16,7 @@
 #include <X11/keysym.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <crypt.h>
 
 #if HAVE_BSD_AUTH
 #include <login_cap.h>
@@ -272,7 +273,7 @@ main(int argc, char **argv) {
 	XCloseDisplay(dpy);
 
   // enable mouse
-  if (system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'") != 0);
+  if (system("xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'") != 0)
     fprintf(stderr,"error: xinput --set-prop 'ImPS/2 Generic Wheel Mouse' 'Device Enabled' '1'\n");
 
 	return 0;
