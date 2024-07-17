@@ -6,18 +6,19 @@ CC = gcc
 CFLAGS  = -I. -ggdb
 LIBS    = -L. -L/usr/lib
 CFLAGS += -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing
-CFLAGS += `pkg-config --cflags cairo pango pangocairo gtk+-3.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0`
+CFLAGS += `pkg-config --cflags gmodule-2.0 gtk+-3.0 libglade-2.0 `
 CFLAGS += -DVERSION=\"${VERSION}\" -DPREFIX=\"${PREFIX}\" -DMAIN_GLADE_FILE=\"trayvolume.glade3\"
-LIBS   += `pkg-config --libs cairo pango pangocairo gtk+-3.0 gmodule-2.0 gmodule-export-2.0 libglade-2.0`
+LIBS   += `pkg-config --libs gmodule-2.0 gtk+-3.0 `
+LIBS   += -lglade-2.0
 LIBS2   =
 
 all: $(PROGS)
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@
 
 %: %.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $^ $(LIBS) $(LIBS2) -o $@
+	$(CC) $(CFLAGS) $^ $(LIBS) -o $@
 #	strip $@
 
 clean:

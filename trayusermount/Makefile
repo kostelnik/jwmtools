@@ -1,1 +1,1 @@
-Makefile.gtk2
+Makefile.gtk3

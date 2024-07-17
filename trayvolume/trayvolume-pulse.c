@@ -37,8 +37,10 @@ on_eventbox1_scroll_event (GtkWidget *object, GdkEventScroll *scroll) {
 }
 
 int main (int argc, char *argv[]) {
+  fprintf (stdout, "glade file: "MAIN_GLADE_FILE"\n");
   // initialize gtk application
   gtk_init (&argc, &argv);
+  fprintf (stdout, "foo\n");
 
   // glade builder
   builder = gtk_builder_new ();

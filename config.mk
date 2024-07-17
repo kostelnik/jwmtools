@@ -13,4 +13,4 @@ VERY_OLD_GLIB = 0
 
 # path to acpi battery info, used by traybattery applet, this path 
 # must contain files "charge_now", "charge_full" and "status"
-SYS_BATTERY_PATH = /sys/bus/acpi/drivers/battery/PNP0C0A:00/power_supply/C16D/
+SYS_BATTERY_PATH = /sys/class/power_supply/BAT0/

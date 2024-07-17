@@ -87,7 +87,7 @@ char *SCreateFromCommand(const char *command) {
   // NOTE: copy paste from SCreateFromFile
   SCheck(command,"undefined filename");
   FILE *f = (FILE*)popen(command,"r");
-  if (!f) {
+  if (f == NULL) {
     SCheck(f,"cannot run command");
     return NULL;
   }
@@ -111,7 +111,7 @@ char *SCreateFromCommand(const char *command) {
     }
     n = o;
   } 
-  fclose(f);
+  pclose(f);
   SFree(s);
   return n;
 }
@@ -119,9 +119,9 @@ char *SCreateFromCommand(const char *command) {
 void SDump(const char * s) {
   // print string to stderr
   if (s==NULL)
-    fprintf(stderr,"SDump(-,%ld): NULL\n",(size_t)s);
+    fprintf(stderr,"SDump(-,%zu): NULL\n",(size_t)s);
   else
-    fprintf(stderr,"SDump(%ld,%ld): \"%s\"\n",strlen(s),(size_t)s,s);
+    fprintf(stderr,"SDump(%zu,%zu): \"%s\"\n",strlen(s),(size_t)s,s);
 }
 
 int SPos(char *haystack, char *needle) {

@@ -12,10 +12,11 @@
 //#define SYS_BATTERY_PATH "data/3/"
 //#define SYS_BATTERY_PATH "data/4/"
 
-GtkBuilder *builder;
-GtkWidget *winTray1;
-GtkImage *imgTray1;
-GtkLabel *labTray1;
+GtkBuilder  *builder;
+GtkWidget   *winTray1;
+GtkImage    *imgTray1;
+GtkLabel    *labTray1;
+char        *batteryPath;
 
 int read_int(char * file);
 char * read_word(char * file);
@@ -24,7 +25,7 @@ int read_int(char * file) {
   // read integer from single /sys/... file
   int i = 0;
   FILE *f;
-  char *fn = SCreateAppend(SYS_BATTERY_PATH,file);
+  char *fn = SCreateAppend(batteryPath,file);
   if ((f = fopen(fn,"r"))) {
     fscanf(f,"%d",&i);
     fclose(f);
@@ -36,7 +37,7 @@ int read_int(char * file) {
 char * read_word(char * file) {
   // read word from single /sys/... file
   // FIXME: this actually reads entire file! including EOL so SEqual is not working
-  char *fn = SCreateAppend(SYS_BATTERY_PATH,file);
+  char *fn = SCreateAppend(batteryPath,file);
   char *s = SCreateFromFile(fn);
   SFree(fn);
   return s;
@@ -100,20 +101,39 @@ update(GtkWidget *widget) {
 }
 
 int main (int argc, char *argv[]) {
+  batteryPath = getenv ("SYS_BATTERY_PATH");
+  if (batteryPath == NULL ) {
+    batteryPath = SYS_BATTERY_PATH;
+  }
   // test if battery file exists
-  if (!g_file_test(SYS_BATTERY_PATH"charge_now", G_FILE_TEST_EXISTS)) {
-    fprintf(stderr, SYS_BATTERY_PATH"zzz\n" );
-    fprintf(stderr, "error: battery file '"SYS_BATTERY_PATH"charge_now' does not exist\n       Please change SYS_BATTERY_PATH directive in config.mk and recompile it\n");
+  char * tmpPath = g_strconcat(batteryPath, "charge_now", NULL);
+  if (!g_file_test (tmpPath, G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, "%szzz\n", batteryPath);
+    fprintf(stderr, "error: battery file '%s' does not exist\n"
+            "       Please change SYS_BATTERY_PATH directive in config.mk and recompile it.\n"
+            "       OR: set SYS_BATTERY_PATH\n",
+            tmpPath);
     return 1;
-  }  
-  if (!g_file_test(SYS_BATTERY_PATH"charge_full", G_FILE_TEST_EXISTS)) {
-    fprintf(stderr, "error: battery file '"SYS_BATTERY_PATH"charge_full' does not exist\n       Please change SYS_BATTERY_PATH directive in config.mk and recompile it\n");
-    return 2;
-  }  
-  if (!g_file_test(SYS_BATTERY_PATH"status", G_FILE_TEST_EXISTS)) {
-    fprintf(stderr, "error: battery file '"SYS_BATTERY_PATH"status' does not exist\n       Please change SYS_BATTERY_PATH directive in config.mk and recompile it\n");
+  }
+  g_free (tmpPath);
+  tmpPath = g_strconcat(batteryPath, "charge_full", NULL);
+  if (!g_file_test (tmpPath, G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, "error: battery file '%s' does not exist\n"
+            "       Please change SYS_BATTERY_PATH directive in config.mk and recompile it.\n"
+            "       OR: set SYS_BATTERY_PATH\n",
+            tmpPath);
+   return 2;
+  }
+  g_free (tmpPath);
+  tmpPath = g_strconcat (batteryPath, "status", NULL);
+  if (!g_file_test(tmpPath, G_FILE_TEST_EXISTS)) {
+    fprintf(stderr, "error: battery file '%s' does not exist\n"
+            "       Please change SYS_BATTERY_PATH directive in config.mk and recompile it.\n"
+            "       OR: set SYS_BATTERY_PATH\n",
+            tmpPath);
     return 3;
-  }  
+  }
+  g_free (tmpPath);
 
   // initialize gtk application
   gtk_init (&argc, &argv);
@@ -142,6 +162,7 @@ int main (int argc, char *argv[]) {
   //g_object_unref (G_OBJECT (builder));
   gtk_widget_show (winTray1);       
   gtk_main ();
+  g_object_unref (builder);
   
   return 0;
 }

@@ -25,7 +25,7 @@ int once_process_count(char * name, int mine) {
     printf("note: strange fscanf result\n");
   //printf("a=%d b=%d\n",a,b);
 
-  fclose(f);
+  pclose(f);
   free(command);
 
   // how many times is process running?

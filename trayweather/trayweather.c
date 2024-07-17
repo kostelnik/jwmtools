@@ -86,7 +86,7 @@ time_handler(GtkWidget *widget) {
 
   // decode metar data
   Decoded_METAR MetarStruct, *Mptr = &MetarStruct;
-  if( DcdMETAR( observation, Mptr) != 0 ) {
+  if( decode_metar( observation, Mptr) != 0 ) {
     printf("metar: decoding error - %s\n",observation);             
     return TRUE;
   }
@@ -186,23 +186,23 @@ time_handler(GtkWidget *widget) {
 
   // clouds
   sprintf(clouds,"gtk-image-missing");
-  printf("Cloud type: %s\n",Mptr->cldTypHgt[0].cloud_type);
+  printf("Cloud type: %s\n",Mptr->cloudGroup[0].cloud_type);
   if (
-      (strcmp("SKC",Mptr->cldTypHgt[0].cloud_type)==0)
-   || (strcmp("CLR",Mptr->cldTypHgt[0].cloud_type)==0) 
-   || (strcmp("NSC",Mptr->cldTypHgt[0].cloud_type)==0)
-   || (strcmp("",Mptr->cldTypHgt[0].cloud_type)==0) 
+      (strcmp("SKC",Mptr->cloudGroup[0].cloud_type)==0)
+   || (strcmp("CLR",Mptr->cloudGroup[0].cloud_type)==0) 
+   || (strcmp("NSC",Mptr->cloudGroup[0].cloud_type)==0)
+   || (strcmp("",Mptr->cloudGroup[0].cloud_type)==0) 
      )
     sprintf(clouds,"weather-clear");
 
   if ( 
-     (strcmp("FEW",Mptr->cldTypHgt[0].cloud_type)==0)
-  || (strcmp("SCT",Mptr->cldTypHgt[0].cloud_type)==0) )
+     (strcmp("FEW",Mptr->cloudGroup[0].cloud_type)==0)
+  || (strcmp("SCT",Mptr->cloudGroup[0].cloud_type)==0) )
     sprintf(clouds,"weather-few-clouds");
 
   if (
-     (strcmp("BKN",Mptr->cldTypHgt[0].cloud_type)==0) 
-  || (strcmp("OVC",Mptr->cldTypHgt[0].cloud_type)==0) 
+     (strcmp("BKN",Mptr->cloudGroup[0].cloud_type)==0) 
+  || (strcmp("OVC",Mptr->cloudGroup[0].cloud_type)==0) 
      )
     sprintf(clouds,"weather-overcast");
   // is it night already?
@@ -217,7 +217,7 @@ time_handler(GtkWidget *widget) {
   
   printf("h=%d night=%d\n",h,night);
   if (night)
-    if ( (!(strcmp("OVC",Mptr->cldTypHgt[0].cloud_type)==0)) && (!(strcmp("BKN",Mptr->cldTypHgt[0].cloud_type)==0)) )
+    if ( (!(strcmp("OVC",Mptr->cloudGroup[0].cloud_type)==0)) && (!(strcmp("BKN",Mptr->cloudGroup[0].cloud_type)==0)) )
       sprintf(clouds,"%s-night",clouds);
   // set icons
   gtk_image_set_from_icon_name(imgClouds1,clouds,GTK_ICON_SIZE_LARGE_TOOLBAR);

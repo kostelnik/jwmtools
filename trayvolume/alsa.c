@@ -64,7 +64,7 @@ int alsa_get_volume(void) {
   SFree(line);
 
   // done
-  fclose(f);
+  pclose(f);
   return r;
 }
 
